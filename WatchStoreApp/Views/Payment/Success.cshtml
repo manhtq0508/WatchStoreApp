@@ -1,0 +1,60 @@
+@model WatchStoreApp.Models.Invoice
+@{
+    ViewData["Title"] = "Payment Success";
+    var themeColor = "#005844";
+}
+
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 font-sans">
+    <div class="bg-white rounded-lg shadow-lg border border-gray-100 p-8 text-center">
+        <div class="mb-6">
+            <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="bi bi-check-circle-fill text-green-600 text-5xl"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Payment Successful!</h1>
+            <p class="text-gray-600">Thank you for your purchase. Your order has been received.</p>
+        </div>
+
+        <div class="bg-gray-50 rounded-lg p-6 mb-6 text-left">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Order Details</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                    <span class="text-gray-600">Invoice ID:</span>
+                    <span class="font-semibold text-gray-900 ml-2">#@Model.InvoiceId</span>
+                </div>
+                <div>
+                    <span class="text-gray-600">Date:</span>
+                    <span class="font-semibold text-gray-900 ml-2">@Model.Date.ToString("dd/MM/yyyy HH:mm")</span>
+                </div>
+                <div>
+                    <span class="text-gray-600">Customer:</span>
+                    <span class="font-semibold text-gray-900 ml-2">@Model.Customer?.Name</span>
+                </div>
+                <div>
+                    <span class="text-gray-600">Status:</span>
+                    <span class="font-semibold text-gray-900 ml-2">
+                        <span class="px-3 py-1 rounded-full text-sm bg-yellow-100 text-yellow-800">@Model.Status</span>
+                    </span>
+                </div>
+                <div class="md:col-span-2">
+                    <span class="text-gray-600">Total Amount:</span>
+                    <span class="font-bold text-xl ml-2" style="color: @themeColor">@Model.Total.ToString("N0") ₫</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="/Home" 
+               class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition">
+                Continue Shopping
+            </a>
+            <a href="/Home" 
+               class="px-6 py-3 text-white rounded-lg font-medium transition"
+               style="background-color: @themeColor;"
+               onmouseover="this.style.backgroundColor='#004535'"
+               onmouseout="this.style.backgroundColor='@themeColor'">
+                Back to Home
+            </a>
+        </div>
+    </div>
+</div>
+

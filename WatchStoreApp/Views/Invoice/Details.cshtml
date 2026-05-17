@@ -1,0 +1,114 @@
+@model WatchStoreApp.Models.Invoice
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Invoice Details";
+    var themeGreen = "#005844";
+}
+
+<div class="w-full p-8 bg-white font-sans">
+    <h1 class="text-2xl font-bold mb-10 uppercase text-gray-800">INVOICE DETAILS</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-4 mb-12 text-lg">
+        <div class="space-y-4 font-medium text-gray-600">
+            <div>Invoice ID</div>
+            <div>Customer Name</div>
+            <div>Order Date</div>
+            <div>Payment Method</div>
+            <div>Shipping Method</div>
+            <div>Address</div>
+            <div>Shipping Note</div>
+            <div>Discount Code</div>
+            <div>Subtotal</div>
+            <div>Discount</div>
+            <div>Shipping Fee</div>
+            <div>Total</div>
+            <div>Status</div>
+        </div>
+
+        <div class="space-y-4 font-semibold text-gray-900">
+            <div>@Model.InvoiceId</div>
+            <div>@Model.Customer?.Name</div>
+            <div>@Model.Date.ToString("dd/MM/yyyy")</div>
+            <div>@(string.IsNullOrEmpty(Model.PaymentMethod) ? "N/A" : Model.PaymentMethod)</div>
+            <div>@(string.IsNullOrEmpty(Model.ShippingMethod) ? "N/A" : Model.ShippingMethod)</div>
+            <div>@(string.IsNullOrEmpty(Model.Address) ? "N/A" : Model.Address)</div>
+            <div>@(string.IsNullOrEmpty(Model.ShippingNote) ? "N/A" : Model.ShippingNote)</div>
+            <div>@(string.IsNullOrEmpty(Model.DiscountCode) ? "N/A" : Model.DiscountCode)</div>
+            <div>@Model.Subtotal.ToString("N0") ₫</div>
+            <div>@Model.Discount.ToString("N0") ₫</div>
+            <div>@Model.ShippingFee.ToString("N0") ₫</div>
+            <div class="text-xl font-bold text-[color:var(--themeGreen)]" style="--themeGreen: @themeGreen">@Model.Total.ToString("N0") ₫</div>
+            <div>
+                @{
+                    var statusColor = Model.Status switch
+                    {
+                        "Pending" => "text-yellow-600",
+                        "Processing" => "text-blue-600",
+                        "Shipped" => "text-purple-600",
+                        "Delivered" => "text-green-600",
+                        "Cancelled" => "text-red-600",
+                        _ => "text-gray-600"
+                    };
+                }
+                <span class="font-medium @statusColor">
+                    @Model.Status
+                </span>
+            </div>
+        </div>
+    </div>
+
+
+    <div>
+        <h2 class="text-2xl font-bold mb-6 text-gray-800">Product List</h2>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr>
+                        <th class="py-4 px-6 text-lg font-bold text-gray-800" style="border-bottom: 2px solid @themeGreen">STT</th>
+                        <th class="py-4 px-6 text-lg font-bold text-gray-800 w-1/3" style="border-bottom: 2px solid @themeGreen">Product Name</th>
+                        <th class="py-4 px-6 text-lg font-bold text-gray-800 text-right" style="border-bottom: 2px solid @themeGreen">Price</th>
+                        <th class="py-4 px-6 text-lg font-bold text-gray-800 text-center" style="border-bottom: 2px solid @themeGreen">Quantity</th>
+                        <th class="py-4 px-6 text-lg font-bold text-gray-800 text-right" style="border-bottom: 2px solid @themeGreen">Total</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-700">
+                    @if (Model.InvoiceDetails != null && Model.InvoiceDetails.Any())
+                    {
+                        int i = 1;
+                        foreach (var d in Model.InvoiceDetails)
+                        {
+                            // Classes for alternating background and hover effect
+                            var baseRowClass = "align-middle transition hover:bg-gray-50";
+                            var stripeClass = "even:bg-gray-100 odd:bg-white";
+
+                            <tr class="@baseRowClass @stripeClass">
+                                <td class="py-6 px-6 text-lg font-medium">@i</td>
+                                <td class="py-6 px-6 text-lg">@d.Product?.Name</td>
+                                <td class="py-6 px-6 text-lg text-right">@d.Price.ToString("N0") ₫</td>
+                                <td class="py-6 px-6 text-lg text-center">@d.Quantity</td>
+                                <td class="py-6 px-6 text-lg text-right font-medium">@d.Total.ToString("N0") ₫</td>
+                            </tr>
+                            i++;
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="py-6 px-6 text-center text-gray-500 text-lg">No products found.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="mt-12 flex gap-4">
+        <a asp-action="Index" class="inline-flex items-center px-6 py-3 border border-gray-300 shadow-sm text-lg font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[color:var(--themeGreen)] transition" style="--themeGreen: @themeGreen">
+            <i class="bi bi-arrow-left mr-2"></i> Back to List
+        </a>
+        <a asp-action="ChangeStatus" asp-route-id="@Model.InvoiceId" class="inline-flex items-center px-6 py-3 bg-[color:var(--themeGreen)] text-white text-lg font-medium rounded-md hover:opacity-90 transition shadow-sm" style="--themeGreen: @themeGreen">
+            <i class="bi bi-pencil-square mr-2"></i> Change Status
+        </a>
+    </div>
+</div>

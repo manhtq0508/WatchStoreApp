@@ -1,0 +1,76 @@
+﻿@model WatchStoreApp.ViewModel.Brand.CreateBrandVM
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Create Brand";
+}
+
+<div class="w-full bg-white p-8">
+    <h1 class="text-3xl font-bold mb-10 text-gray-800 uppercase">CREATE A NEW BRAND</h1>
+
+    <form method="post" enctype="multipart/form-data" class="space-y-8 max-w-4xl">
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
+            <label class="block text-xl font-medium text-gray-800 md:col-span-1 pt-4">Brand Image</label>
+
+            <div class="md:col-span-3">
+                <label for="ImageFile" class="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition group relative overflow-hidden">
+
+                    <div class="flex flex-col items-center justify-center pt-5 pb-6 relative z-10">
+                        <p class="mb-4 text-lg text-gray-500">Choose image</p>
+                        <div class="px-10 py-2 bg-[#4F93E7] text-white rounded text-lg shadow-sm group-hover:bg-blue-600 transition">
+                            Upload
+                        </div>
+                    </div>
+
+                    <input type="file" name="ImageFile" id="ImageFile" accept="image/*" class="hidden" />
+                </label>
+                <span asp-validation-for="ImageFile" class="text-red-600 text-sm mt-2 block"></span>
+            </div>
+        </div>
+
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
+            <label asp-for="BrandName" class="block text-xl font-medium text-gray-800 md:col-span-1">Brand Name</label>
+            <div class="md:col-span-3">
+                <input asp-for="BrandName" placeholder="Brand Name"
+                       class="w-full px-4 py-3 border border-gray-300 rounded bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#005844] focus:border-transparent text-lg placeholder-gray-400" />
+                <span asp-validation-for="BrandName" class="text-red-600 text-sm mt-2 block"></span>
+            </div>
+        </div>
+
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
+            <label asp-for="Origin" class="block text-xl font-medium text-gray-800 md:col-span-1">Origin</label>
+            <div class="md:col-span-3">
+                <input asp-for="Origin" placeholder="Origin"
+                       class="w-full px-4 py-3 border border-gray-300 rounded bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#005844] focus:border-transparent text-lg placeholder-gray-400" />
+                <span asp-validation-for="Origin" class="text-red-600 text-sm mt-2 block"></span>
+            </div>
+        </div>
+
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-center mt-12">
+            <div class="md:col-span-1"></div>
+            <div class="md:col-span-3">
+                <button type="submit" class="w-full px-6 py-4 bg-[#005844] text-white text-xl font-medium rounded hover:bg-[#004535] transition shadow-sm">
+                    Create new Brand
+                </button>
+            </div>
+        </div>
+
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        document.getElementById('ImageFile').addEventListener('change', function(e) {
+            var fileName = e.target.files[0] ? e.target.files[0].name : "Choose image";
+            // Find the text element inside the label and update it
+            this.closest('label').querySelector('p').textContent = fileName;
+        });
+    </script>
+}

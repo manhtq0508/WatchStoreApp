@@ -1,0 +1,85 @@
+@model IEnumerable<WatchStoreApp.ViewModel.Invoice.ViewListInvoiceVM>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Invoices";
+    var themeDarkGreen = "#005844";
+}
+
+<div class="w-full p-8 bg-white font-sans">
+
+    <div class="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800 uppercase tracking-wide">INVOICES</h1>
+        </div>
+
+        <div class="w-full md:w-auto">
+            <form asp-action="Search" method="post" class="relative flex-grow md:flex-grow-0 md:w-[400px]">
+                <input type="text" name="search_invoice" placeholder="Enter ID/Customer Name/Date ..."
+                       class="w-full pl-4 pr-10 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[color:var(--theme)] text-gray-600" style="--theme:@themeDarkGreen" />
+                <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    <i class="bi bi-search text-lg"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr>
+                    <th class="py-4 px-6 text-lg font-bold text-gray-800" style="border-bottom: 2px solid @themeDarkGreen">ID</th>
+                    <th class="py-4 px-6 text-lg font-bold text-gray-800" style="border-bottom: 2px solid @themeDarkGreen">Customer Name</th>
+                    <th class="py-4 px-6 text-lg font-bold text-gray-800" style="border-bottom: 2px solid @themeDarkGreen">Order Date</th>
+                    <th class="py-4 px-6 text-lg font-bold text-gray-800" style="border-bottom: 2px solid @themeDarkGreen">Total</th>
+                    <th class="py-4 px-6 text-lg font-bold text-gray-800" style="border-bottom: 2px solid @themeDarkGreen">Status</th>
+                    <th class="py-4 px-6 text-lg font-bold text-gray-800" style="border-bottom: 2px solid @themeDarkGreen"></th>
+                </tr>
+            </thead>
+            <tbody class="text-gray-700">
+                @foreach (var invoice in Model)
+                {
+                    // Updated row classes for alternating background and hover effect
+                    var baseRowClass = "align-middle transition hover:bg-gray-50";
+                    var stripeClass = "even:bg-gray-100 odd:bg-white";
+
+                    // Status color logic (kept same)
+                    var statusColor = invoice.Status switch
+                    {
+                        "Pending" => "text-yellow-600", // Changed to just text color for cleaner look
+                        "Processing" => "text-blue-600",
+                        "Shipped" => "text-purple-600",
+                        "Delivered" => "text-green-600",
+                        "Cancelled" => "text-red-600",
+                        _ => "text-gray-600"
+                    };
+
+                    <tr class="@baseRowClass @stripeClass">
+                        <td class="py-6 px-6 text-lg font-medium">@invoice.InvoiceId</td>
+                        <td class="py-6 px-6 text-lg">@invoice.CustomerName</td>
+                        <td class="py-6 px-6 text-lg">@invoice.Date.ToString("dd/MM/yyyy")</td>
+                        <td class="py-6 px-6 text-lg font-medium">@invoice.Total.ToString("N0") ₫</td>
+                        <td class="py-6 px-6 text-lg">
+                            <span class="font-medium @statusColor">
+                                @invoice.Status
+                            </span>
+                        </td>
+                        <td class="py-6 px-6 text-right whitespace-nowrap">
+                            <div class="flex items-center justify-end gap-6">
+                                <a asp-action="ChangeStatus" asp-route-id="@invoice.InvoiceId"
+                                   class="text-gray-400 hover:text-green-600 transition text-2xl"
+                                   title="Change Status">
+                                    <i class="bi bi-check-circle"></i>
+                                </a>
+                                <a asp-action="Details" asp-route-id="@invoice.InvoiceId"
+                                   class="text-gray-400 hover:text-blue-600 transition text-2xl"
+                                   title="View Details">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

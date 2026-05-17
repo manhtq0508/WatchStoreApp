@@ -1,0 +1,202 @@
+@model WatchStoreApp.ViewModel.Cart.CartVM
+@{
+    ViewData["Title"] = "Cart";
+    // Theme colors for consistency in the redesigned parts
+    var themeColorText = "text-[#005844]";
+    var themeBg = "bg-[#005844]";
+    var themeHoverBg = "hover:bg-[#004535]";
+}
+
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 font-sans">
+    <nav class="text-sm text-gray-500 mb-8">
+        <a href="/Home" class="hover:text-gray-900 transition">Home</a>
+        <span class="mx-2">/</span>
+        <span class="font-medium text-gray-900">Cart</span>
+    </nav>
+
+    <h1 class="text-3xl font-bold text-gray-900 mb-10 uppercase tracking-wide">
+        CART (@Model.TotalItems products)
+    </h1>
+
+    @if (Model.Items.Any())
+    {
+        <div class="bg-white shadow-sm rounded-lg overflow-hidden mb-10 border border-gray-100">
+            <table class="w-full text-left">
+                <thead class="border-b border-gray-200">
+                    <tr>
+                        <th class="px-6 py-4 text-lg font-semibold text-gray-700">Product</th>
+                        <th class="px-6 py-4 text-lg font-semibold text-gray-700 text-center">Price</th>
+                        <th class="px-6 py-4 text-lg font-semibold text-gray-700 text-center">Quantity</th>
+                        <th class="px-6 py-4 text-lg font-semibold text-gray-700 text-right">Total</th>
+                        <th class="px-6 py-4"></th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr class="hover:bg-gray-50 transition-colors" data-product-id="@item.ProductId">
+                            <td class="px-6 py-8">
+                                <div class="flex items-center">
+                                    <img src="@item.ImageUrl" alt="@item.Name" class="h-32 w-32 object-contain rounded-md border border-gray-200 p-2 bg-white mr-6" />
+                                    <div>
+                                        <h2 class="text-xl font-bold text-gray-900 mb-2">@item.Name</h2>
+                                        <p class="text-sm text-gray-500">ID: @item.ProductId</p>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td class="px-6 py-8 text-center">
+                                <div class="text-xl font-semibold text-gray-900">@item.Price.ToString("N0") ₫</div>
+                            </td>
+
+                            <td class="px-6 py-8">
+                                <div class="flex items-center justify-center">
+                                    <div class="flex items-center border border-gray-300 rounded-md overflow-hidden">
+                                        <button onclick="updateQuantity(@item.ProductId, @item.Quantity - 1)"
+                                                class="w-10 h-10 flex items-center justify-center bg-gray-50 hover:bg-gray-100 transition text-gray-600 hover:text-gray-900 focus:outline-none"
+                                                @(item.Quantity <= 1 ? "disabled" : "")>
+                                            <i class="bi bi-dash text-lg"></i>
+                                        </button>
+                                        <span class="w-14 text-center font-semibold text-lg text-gray-900 quantity-display bg-white" data-product-id="@item.ProductId">@item.Quantity</span>
+                                        <button onclick="updateQuantity(@item.ProductId, @item.Quantity + 1)"
+                                                class="w-10 h-10 flex items-center justify-center bg-gray-50 hover:bg-gray-100 transition text-gray-600 hover:text-gray-900 focus:outline-none">
+                                            <i class="bi bi-plus text-lg"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td class="px-6 py-8 text-right">
+                                <div class="text-xl font-bold @themeColorText">@((item.Price * item.Quantity).ToString("N0")) ₫</div>
+                            </td>
+
+                            <td class="px-6 py-8 text-right">
+                                <button onclick="removeFromCart(@item.ProductId)"
+                                        class="text-gray-400 hover:text-red-600 transition p-2"
+                                        title="Remove item">
+                                    <i class="bi bi-trash3 text-2xl"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="flex flex-col md:flex-row justify-end items-center gap-8 bg-gray-50 p-8 rounded-lg">
+            <div class="text-center md:text-right">
+                <span class="text-2xl font-bold text-gray-700 mr-4">Total:</span>
+                <span class="text-3xl font-bold @themeColorText" id="totalPrice">@Model.TotalPrice.ToString("N0") ₫</span>
+            </div>
+            <button onclick="checkout()"
+                    class="px-10 py-4 @themeBg text-white rounded-md font-bold uppercase tracking-wider hover:shadow-lg transition-all duration-300 @themeHoverBg text-lg">
+                Checkout
+            </button>
+        </div>
+    }
+    else
+    {
+        <div class="bg-white rounded-lg shadow p-12 text-center">
+            <i class="bi bi-cart-x text-6xl text-gray-400 mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-600 mb-2">Your cart is empty</h3>
+            <p class="text-gray-500 mb-6">Add some products to your cart to get started!</p>
+            <a href="/Home"
+               class="inline-block px-6 py-3 text-white rounded-lg transition"
+               style="background-color: #005844;">
+                Continue Shopping
+            </a>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Existing JavaScript logic preserved exactly as is
+        function updateQuantity(productId, newQuantity) {
+            if (newQuantity < 1) return;
+
+            fetch('/Cart/UpdateQuantity', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `productId=${productId}&quantity=${newQuantity}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update quantity display
+                    document.querySelector(`.quantity-display[data-product-id="${productId}"]`).textContent = newQuantity;
+
+                    // Update total price
+                    document.getElementById('totalPrice').textContent = formatCurrency(data.totalPrice);
+
+                    // Update page title with new total items
+                    document.querySelector('h1').textContent = `CART (${data.totalItems} products)`;
+
+                    // Reload page to reflect all changes
+                    location.reload();
+                } else {
+                    alert(data.message || 'Failed to update quantity');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while updating quantity');
+            });
+        }
+
+        function removeFromCart(productId) {
+            if (!confirm('Are you sure you want to remove this item from your cart?')) {
+                return;
+            }
+
+            fetch('/Cart/RemoveFromCart', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `productId=${productId}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove row from table
+                    const row = document.querySelector(`tr[data-product-id="${productId}"]`);
+                    if (row) {
+                        row.remove();
+                    }
+
+                    // Update total price
+                    document.getElementById('totalPrice').textContent = formatCurrency(data.totalPrice);
+
+                    // Update page title
+                    document.querySelector('h1').textContent = `CART (${data.totalItems} products)`;
+
+                    // If cart is empty, reload to show empty cart message
+                    if (data.totalItems === 0) {
+                        location.reload();
+                    }
+                } else {
+                    alert('Failed to remove item from cart');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while removing item');
+            });
+        }
+
+        function checkout() {
+            window.location.href = '/Payment';
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN').format(amount) + ' ₫';
+        }
+    </script>
+}

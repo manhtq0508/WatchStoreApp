@@ -1,0 +1,96 @@
+﻿@model WatchStoreApp.ViewModel.Account.UpdateAccountVM
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Update Account";
+    var themeGreen = "#005844";
+}
+
+<div class="w-full max-w-4xl mx-auto mt-10 bg-white font-sans rounded-lg shadow-md p-8">
+
+    <!-- Header with user icon and info -->
+    <div class="flex items-center mb-10">
+        <!-- User Icon -->
+        <div class="w-16 h-16 flex-shrink-0 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-2xl">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+        </div>
+
+        <!-- Name & Role -->
+        <div class="ml-4">
+            <h2 class="text-xl font-semibold text-gray-800">@Model.Name</h2>
+            <p class="text-gray-500">@Model.Role</p>
+        </div>
+    </div>
+
+    <form method="post" class="space-y-6">
+        <input type="hidden" asp-for="EmployeeId" />
+
+        <!-- Name -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+            <label asp-for="Name" class="text-lg font-medium text-gray-700 md:col-span-1">Name</label>
+            <div class="md:col-span-3">
+                <input asp-for="Name" placeholder="Full Name"
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[color:var(--themeGreen)] focus:border-transparent"
+                       style="--themeGreen: @themeGreen" />
+            </div>
+        </div>
+
+        <!-- Card Number (readonly) -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+            <label asp-for="CardNumber" class="text-lg font-medium text-gray-700 md:col-span-1">Card Number</label>
+            <div class="md:col-span-3">
+                <input asp-for="CardNumber" readonly
+                       class="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed" />
+            </div>
+        </div>
+
+        <!-- Phone Number -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+            <label asp-for="PhoneNumber" class="text-lg font-medium text-gray-700 md:col-span-1">Phone Number</label>
+            <div class="md:col-span-3">
+                <input asp-for="PhoneNumber" placeholder="Phone Number"
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[color:var(--themeGreen)] focus:border-transparent"
+                       style="--themeGreen: @themeGreen" />
+            </div>
+        </div>
+
+        <!-- Role (readonly) -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+            <label asp-for="Role" class="text-lg font-medium text-gray-700 md:col-span-1">Role</label>
+            <div class="md:col-span-3">
+                <input asp-for="Role" readonly
+                       class="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed" />
+            </div>
+        </div>
+
+        <!-- Email -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+            <label asp-for="Email" class="text-lg font-medium text-gray-700 md:col-span-1">Email</label>
+            <div class="md:col-span-3">
+                <input asp-for="Email" type="email" placeholder="Email"
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[color:var(--themeGreen)] focus:border-transparent"
+                       style="--themeGreen: @themeGreen" />
+            </div>
+        </div>
+
+        <!-- Password -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+            <label asp-for="Password" class="text-lg font-medium text-gray-700 md:col-span-1">Password</label>
+            <div class="md:col-span-3">
+                <input asp-for="Password" type="password" placeholder="Password"
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[color:var(--themeGreen)] focus:border-transparent"
+                       style="--themeGreen: @themeGreen" />
+            </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="flex justify-end pt-6">
+            <button type="submit"
+                    class="px-6 py-3 bg-[color:var(--themeGreen)] text-white font-semibold rounded-lg hover:opacity-90 transition-shadow shadow-md"
+                    style="--themeGreen: @themeGreen">
+                Update Account
+            </button>
+        </div>
+    </form>
+</div>

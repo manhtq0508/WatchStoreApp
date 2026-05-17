@@ -1,0 +1,145 @@
+﻿@model IEnumerable<WatchStoreApp.Models.Product>
+@{
+    ViewData["Title"] = @ViewBag.Brand.BrandName;
+
+    // Theme colors
+    var themeColorText = "text-[#005844]";
+    var themeColorBorder = "border-[#005844]";
+
+    // --- TAB STYLING HELPERS ---
+    // Base style for all tabs
+    var baseTabStyle = "inline-block py-4 px-6 text-center font-bold uppercase tracking-wider border-b-2 transition duration-300 whitespace-nowrap focus:outline-none no-underline";
+
+    // Style for inactive tabs (gray text, transparent border)
+    var inactiveTabStyle = $"{baseTabStyle} text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300";
+
+    // Style for the active tab (theme color text and border) - Applied to "Brands"
+    var activeTabStyle = $"{baseTabStyle} {themeColorText} {themeColorBorder}";
+}
+
+<style>
+    /* Ensure hover button works with Tailwind 'group' class on parent */
+    .group:hover .group-hover\:opacity-100 {
+        opacity: 1;
+    }
+
+    /* Custom style for select dropdowns */
+    .filter-select {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 0.5rem center;
+        background-repeat: no-repeat;
+        background-size: 1.5em 1.5em;
+        padding-right: 2.5rem;
+    }
+
+    /* Hide scrollbar for simplified tab nav on smaller screens */
+    .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .hide-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+</style>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 font-sans">
+
+    <div class="w-full bg-white border-b border-gray-200 mb-8">
+        <nav class="flex flex-wrap justify-center -mb-px overflow-x-auto hide-scrollbar" aria-label="Product categories tabs">
+
+            <a href="/Home" class="@activeTabStyle">
+                Brands
+            </a>
+
+            <a href="/Home/Mechanical" class="@inactiveTabStyle">
+                Mechanical Watches
+            </a>
+
+            <a href="/Home/Smartwatch" class="@inactiveTabStyle">
+                Smart Watches
+            </a>
+
+            <a href="/Home" class="@inactiveTabStyle">
+                Gender
+            </a>
+
+            <a href="/Home" class="@inactiveTabStyle">
+                Styles
+            </a>
+        </nav>
+    </div>
+    <h1 class="text-3xl font-bold uppercase mb-8 text-gray-800">@ViewBag.Brand.BrandName</h1>
+
+    <form method="get" asp-action="Filter" class="flex flex-wrap gap-4 mb-8">
+        <input type="hidden" name="brandId" value="@ViewBag.Brand.BrandId" />
+
+        <div class="relative">
+            <select name="price" class="filter-select ...">
+                <option value="">Filter by Price</option>
+                <option value="low-high">Price: Low to High</option>
+                <option value="high-low">Price: High to Low</option>
+                <option value="under-5m">Under 5,000,000 ₫</option>
+                <option value="5m-10m">5,000,000 ₫ - 10,000,000 ₫</option>
+                <option value="over-10m">Over 10,000,000 ₫</option>
+            </select>
+        </div>
+
+        <div class="relative">
+            <select name="gender" class="filter-select ...">
+                <option value="">Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+            </select>
+        </div>
+
+        <div class="relative">
+            <select name="style" class="filter-select ...">
+                <option value="">Style</option>
+                <option value="Classic">Classic</option>
+                <option value="Modern">Modern</option>
+                <option value="Sport">Sport</option>
+                <option value="Luxury">Luxury</option>
+            </select>
+        </div>
+
+        <button type="submit" class="bg-[#005844] text-white px-6 py-2 rounded hover:bg-[#004535]">
+            Filter
+        </button>
+    </form>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+
+        @foreach (var p in Model)
+        {
+            var specs = $"{p.CaseDiameter}mm | {p.WatchType}";
+            var imageUrl = string.IsNullOrEmpty(p.ImageUrl1) ? "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&q=80&w=600" : p.ImageUrl1;
+            var price = p.SellingPrice.ToString("N0") + "₫";
+            
+            <div class="bg-white p-4 rounded-lg shadow-sm hover:shadow-xl transition-shadow duration-300 group text-center border border-transparent hover:border-gray-100">
+                <a href="@(p.WatchType == "Smartwatch" ? $"/Home/Smartwatch/{p.ProductId}" : $"/Home/Mechanical/{p.ProductId}")" class="block">
+                    <div class="w-full h-64 flex items-center justify-center mb-4 overflow-hidden">
+                        <img src="@imageUrl" alt="@p.Name" class="max-h-full max-w-full object-contain group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&q=80&w=600'">
+                    </div>
+                </a>
+
+                <h4 class="text-sm font-semibold text-gray-800 mb-1 leading-snug min-h-[40px] line-clamp-2">
+                    @p.Name
+                </h4>
+
+                <p class="text-xs text-gray-500 mb-3">@specs</p>
+
+                <p class="text-lg font-bold text-[#005844] mb-4">@price</p>
+
+                <a href="@(p.WatchType == "Smartwatch" ? $"/Home/Smartwatch/{p.ProductId}" : $"/Home/Mechanical/{p.ProductId}")" 
+                   class="w-full py-2 text-white rounded font-medium transition-colors shadow-sm block text-center"
+                   style="background-color: #005844;"
+                   onmouseover="this.style.backgroundColor='#004535'"
+                   onmouseout="this.style.backgroundColor='#005844'">
+                    Add to Cart
+                </a>
+            </div>
+        }
+    </div>
+</div>

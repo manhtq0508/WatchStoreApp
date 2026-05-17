@@ -1,0 +1,134 @@
+﻿<header class="w-full bg-white border-b" style="border-bottom: 2px solid #015D4E;">
+    <style>
+        .icon-outline {
+        color: #ffffff;
+        -webkit-text-stroke: 0.5px #000000;
+        text-stroke: 0.5px #000000;
+        }
+        .icon-black {
+        color: #000000;
+        }
+    </style>
+    <div class="container mx-auto flex items-center justify-between py-4 px-4">
+
+        <!-- Logo (Square, max height) -->
+        <div class="flex items-center">
+            @if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+                var logoLink = (role == "Admin" || role == "Employee") ? "/Dashboard" : "/Home";
+
+                <a href="@logoLink">
+                    <img src="~/images/Logo.png" class="h-14 w-auto object-contain" alt="Logo" />
+                </a>
+            }
+        </div>
+
+
+        <!-- Phone Icon and Number -->
+        <div class="flex items-center space-x-2">
+            <i class="fa fa-phone text-xl icon-outline"></i>
+            <span class="font-medium text-gray-700">1800 5678</span>
+        </div>
+
+
+        <!-- Search Bar with Icon at the end -->
+        <div class="flex items-center flex-1 max-w-md mx-4">
+            @if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+
+                if (role == "Customer")
+                {
+                    <form method="get" action="/Home/Searching" class="relative w-full">
+                        <input type="text"
+                               name="query"
+                               class="w-full bg-white border border-gray-300 rounded-md px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               placeholder="Searching ..." />
+                        <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 hover:opacity-80">
+                            <i class="fa fa-search icon-black"></i>
+                        </button>
+                    </form>
+                }
+            }
+        </div>
+
+
+        <!-- User Icon Circle + Cart -->
+        <div class="flex items-center">
+
+            <!-- Cart Icon (Only for Customer) -->
+            @if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+
+                if (role == "Customer")
+                {
+                    <a href="/Cart" class="relative mr-4 hover:opacity-80 transition">
+                        <i class="fa fa-shopping-cart text-xl icon-outline"></i>
+                    </a>
+                }
+            }
+
+            @if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                <div class="relative" id="userMenuContainer">
+                    <!-- User Icon Button -->
+                    <button id="userMenuButton" 
+                            class="w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 transition flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <i class="fa fa-user icon-outline"></i>
+                    </button>
+                    
+                    <!-- Dropdown Menu -->
+                    <div id="userMenuDropdown" 
+                         class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                        @{
+                            var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+                            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                            string accountLink = "/Account";
+                            
+                            if (userRole == "Customer")
+                            {
+                                accountLink = $"/Profile";
+                            }
+                            else if (userRole == "Employee")
+                            {
+                                accountLink = $"/Employee/Edit/{userId}";
+                            }
+                            else if (userRole == "Admin")
+                            {
+                                accountLink = "/Account";
+                            }
+                        }
+                        
+                        @if (userRole == "Admin" || userRole == "Employee")
+                        {
+                            <a href="/Dashboard" 
+                               class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition">
+                                <i class="fa fa-tachometer-alt mr-2 icon-outline"></i>Dashboard
+                            </a>
+                        }
+                        
+                        <a href="@accountLink" 
+                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition">
+                            <i class="fa fa-user-edit mr-2 icon-outline"></i>Update Account
+                        </a>
+                        <a href="/Signin/Logout" 
+                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition">
+                            <i class="fa fa-sign-out-alt mr-2 icon-outline"></i>Logout
+                        </a>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <a href="/Signin" class="hover:opacity-80 transition">
+                    <div class="w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 transition flex items-center justify-center">
+                        <i class="fa fa-user icon-outline"></i>
+                    </div>
+                </a>
+            }
+        </div>
+
+    </div>
+</header>

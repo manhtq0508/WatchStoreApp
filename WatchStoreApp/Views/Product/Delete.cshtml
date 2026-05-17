@@ -1,0 +1,39 @@
+﻿@model WatchStoreApp.Models.Product
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Delete Product";
+}
+
+<div class="w-full p-8 bg-white font-sans">
+
+    <h1 class="text-2xl font-bold mb-8 uppercase text-gray-800">DELETE THE PRODUCT</h1>
+
+    <h2 class="text-lg text-gray-800 mb-10 font-medium">
+        Do you wish to delete this product permanently?
+    </h2>
+
+    <form asp-action="DeleteConfirmed" method="post">
+        <input type="hidden" asp-for="ProductId" />
+
+        <div class="grid grid-cols-4 gap-4 mb-12 items-center max-w-3xl">
+            <div class="text-base text-gray-600 col-span-1 font-medium">
+                Product Name
+            </div>
+            <div class="text-xl font-semibold text-gray-900 col-span-3 leading-tight">
+                @Model.Name
+            </div>
+        </div>
+
+        <div class="flex gap-6">
+            <a asp-action="Index"
+               class="px-10 py-2.5 border border-gray-400 text-gray-700 bg-white rounded hover:bg-gray-50 transition font-medium text-center min-w-[120px]">
+                Back
+            </a>
+
+            <button type="submit"
+                    class="px-10 py-2.5 bg-[#EF4444] text-white rounded hover:bg-red-600 transition font-medium shadow-sm min-w-[120px]">
+                Delete
+            </button>
+        </div>
+    </form>
+</div>

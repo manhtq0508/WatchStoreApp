@@ -1,0 +1,264 @@
+@model WatchStoreApp.ViewModel.Payment.PaymentVM
+@{
+    ViewData["Title"] = "Payment";
+    // Theme colors
+    var themeColorText = "text-[#005844]";
+    var themeBg = "bg-[#005844]";
+    var themeHoverBg = "hover:bg-[#004535]";
+    var themeBorder = "border-[#005844]";
+    var themeFocusRing = "focus:ring-[#005844]";
+}
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 font-sans">
+    <nav class="text-sm text-gray-500 mb-8">
+        <a href="/Home" class="hover:text-gray-900 transition">Home</a>
+        <span class="mx-2">/</span>
+        <a href="/Cart" class="hover:text-gray-900 transition">Cart</a>
+        <span class="mx-2">/</span>
+        <span class="font-medium text-gray-900">Payment</span>
+    </nav>
+
+    <h1 class="text-3xl font-bold text-gray-900 mb-10 uppercase tracking-wide">PAYMENT</h1>
+
+    <form asp-action="ProcessPayment" method="post" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        @Html.AntiForgeryToken()
+
+        <input type="hidden" asp-for="ProductId" />
+        <input type="hidden" asp-for="Quantity" />
+        <input type="hidden" asp-for="BaseShippingFee" />
+
+        <div class="lg:col-span-7 space-y-8">
+            <div class="space-y-6">
+                <div>
+                    <label asp-for="CustomerName" class="block text-sm font-medium text-gray-700 mb-2">Full Name <span class="text-red-500">*</span></label>
+                    <input asp-for="CustomerName" class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 @themeFocusRing @themeBorder" />
+                    <span asp-validation-for="CustomerName" class="text-red-500 text-sm mt-1"></span>
+                </div>
+
+                <div>
+                    <label asp-for="Email" class="block text-sm font-medium text-gray-700 mb-2">Email <span class="text-red-500">*</span></label>
+                    <input asp-for="Email" type="email" class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 @themeFocusRing @themeBorder" />
+                    <span asp-validation-for="Email" class="text-red-500 text-sm mt-1"></span>
+                </div>
+
+                <div>
+                    <label asp-for="PhoneNumber" class="block text-sm font-medium text-gray-700 mb-2">Phone Number <span class="text-red-500">*</span></label>
+                    <input asp-for="PhoneNumber" class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 @themeFocusRing @themeBorder" />
+                    <span asp-validation-for="PhoneNumber" class="text-red-500 text-sm mt-1"></span>
+                </div>
+
+                <div>
+                    <label asp-for="Address" class="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                    <input asp-for="Address" class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 @themeFocusRing @themeBorder" placeholder="Apartment, studio, or floor" />
+                    <span asp-validation-for="Address" class="text-red-500 text-sm mt-1"></span>
+                </div>
+            </div>
+
+            <div>
+                <label asp-for="ShippingMethod" class="block text-sm font-medium text-gray-700 mb-2">Shipping Method</label>
+                <select asp-for="ShippingMethod" class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 @themeFocusRing @themeBorder bg-white" id="ShippingMethod">
+                    <option value="Standard">Standard Delivery</option>
+                    <option value="Express">Express Delivery</option>
+                </select>
+                <p class="text-xs text-gray-500 mt-1">Express costs 50% more than Standard.</p>
+            </div>
+
+            <div>
+                <label asp-for="ShippingNote" class="block text-sm font-medium text-gray-700 mb-2">Shipping Note</label>
+                <textarea asp-for="ShippingNote" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 @themeFocusRing @themeBorder" placeholder="Notes about your order, e.g. special notes for delivery."></textarea>
+            </div>
+
+            <div>
+                <label asp-for="PaymentMethod" class="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
+                <select asp-for="PaymentMethod" class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 @themeFocusRing @themeBorder bg-white">
+                    <option value="Cash">Cash on Delivery</option>
+                    <option value="Credit Card">Credit Card</option>
+                </select>
+            </div>
+
+            <input type="hidden" name="ReturnUrl"
+                   value="@Context.Request.Path@Context.Request.QueryString" />
+
+
+            <div>
+                <label asp-for="DiscountCode" class="block text-sm font-medium text-gray-700 mb-2">Coupon Code</label>
+                <div class="flex gap-3">
+                    <input asp-for="DiscountCode" id="discountCodeInput" class="flex-1 px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 @themeFocusRing @themeBorder" placeholder="Enter coupon code" />
+                    <button type="button" onclick="applyDiscount()" id="applyDiscountBtn" class="px-8 py-3 @themeBg text-white font-medium rounded-md hover:shadow-md transition-all duration-300 @themeHoverBg">
+                        Apply
+                    </button>
+                </div>
+                <div id="discountMessage" class="text-sm mt-2"></div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-5">
+            <div class="bg-gray-50 rounded-lg p-8 border border-gray-200">
+                <div class="grid grid-cols-12 text-sm font-medium text-gray-500 mb-4">
+                    <div class="col-span-7">Product</div>
+                    <div class="col-span-3 text-right">Price</div>
+                    <div class="col-span-2 text-center">Quantity</div>
+                </div>
+
+                <div class="space-y-4 mb-8 pb-8 border-b border-gray-200">
+                    @foreach (var item in Model.Cart.Items)
+                    {
+                        <div class="grid grid-cols-12 items-center">
+                            <div class="col-span-7 flex items-center">
+                                <img src="@item.ImageUrl" alt="@item.Name" class="h-16 w-16 object-contain rounded-md border border-gray-200 p-1 bg-white mr-4" />
+                                <div>
+                                    <h3 class="font-semibold text-gray-900 text-sm">@item.Name</h3>
+                                    <p class="text-xs text-gray-500">ID: @item.ProductId</p>
+                                </div>
+                            </div>
+                            <div class="col-span-3 text-right font-semibold text-gray-900 text-sm">@item.Price.ToString("N0")₫</div>
+                            <div class="col-span-2 text-center text-sm text-gray-700">@item.Quantity</div>
+                        </div>
+                    }
+                </div>
+
+                <div class="space-y-4 mb-8">
+                    <div class="flex justify-between text-gray-700">
+                        <span>Subtotal</span>
+                        <span class="font-semibold" id="summarySubtotal">@Model.Subtotal.ToString("N0")₫</span>
+                    </div>
+                    <div class="flex justify-between text-gray-700">
+                        <span>Shipping Fee</span>
+                        <span class="font-semibold" id="summaryShippingFee">@Model.ShippingFee.ToString("N0")₫</span>
+                    </div>
+                    <div id="discountRow" class="flex justify-between text-gray-700 @(Model.Discount > 0 ? "" : "hidden")">
+                        <span>Discount Price</span>
+                        <span class="font-semibold text-red-600" id="summaryDiscount">-@Model.Discount.ToString("N0")₫</span>
+                    </div>
+                    <div class="flex justify-between items-center pt-4 border-t border-gray-200">
+                        <span class="text-xl font-bold text-gray-900">Total</span>
+                        <span class="text-3xl font-bold @themeColorText" id="summaryTotal">@Model.Total.ToString("N0")₫</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full py-4 @themeBg text-white rounded-md font-bold uppercase tracking-wider hover:shadow-lg transition-all duration-300 @themeHoverBg text-lg">
+                    Place an order
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        // --- PRESERVED BACKEND LOGIC ---
+        // Initialize values from the server-side model
+        const subtotal = @Model.Subtotal.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        const baseShippingFee = @Model.BaseShippingFee.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        let shippingFee = @Model.ShippingFee.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        let appliedDiscount = @Model.Discount.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        const shippingMethodSelect = document.getElementById('ShippingMethod');
+
+        function parseAmount(value) {
+            return parseFloat(value);
+        }
+
+        function calculateClientShippingFee(method) {
+            return parseAmount(baseShippingFee) * (method === 'Express' ? 1.5 : 1);
+        }
+
+        // Currency formatter for Vietnamese Dong
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN').format(amount) + '₫';
+        }
+
+        // Updates the summary section with new values
+        function updateSummary() {
+            const total = parseAmount(subtotal) + parseAmount(shippingFee) - parseAmount(appliedDiscount);
+
+            document.getElementById('summarySubtotal').textContent = formatCurrency(parseAmount(subtotal));
+            document.getElementById('summaryShippingFee').textContent = formatCurrency(parseAmount(shippingFee));
+
+            const discountRow = document.getElementById('discountRow');
+            const summaryDiscount = document.getElementById('summaryDiscount');
+            if (parseAmount(appliedDiscount) > 0) {
+                discountRow.classList.remove('hidden');
+                summaryDiscount.textContent = '-' + formatCurrency(parseAmount(appliedDiscount));
+            } else {
+                discountRow.classList.add('hidden');
+                summaryDiscount.textContent = formatCurrency(0);
+            }
+
+            document.getElementById('summaryTotal').textContent = formatCurrency(total);
+        }
+
+        // Handles discount code application via AJAX
+        function applyDiscount() {
+            const discountCodeInput = document.getElementById('discountCodeInput');
+            const discountCode = discountCodeInput.value.trim();
+            const messageDiv = document.getElementById('discountMessage');
+            const applyBtn = document.getElementById('applyDiscountBtn');
+
+            if (!discountCode) {
+                messageDiv.innerHTML = '<span class="text-red-600">Please enter a coupon code.</span>';
+                return;
+            }
+
+            // Disable button during request
+            applyBtn.disabled = true;
+            applyBtn.textContent = 'Applying...';
+            applyBtn.classList.add('opacity-75');
+
+            fetch('/Payment/ValidateDiscountCode', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // Include Anti-Forgery Token if your controller requires it
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: JSON.stringify({
+                    discountCode: discountCode,
+                    subtotal: parseAmount(subtotal),
+                    shippingMethod: shippingMethodSelect.value
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    appliedDiscount = data.discount;
+                    shippingFee = data.shippingFee;
+                    messageDiv.innerHTML = '<span class="text-green-600">' + data.message + '</span>';
+                    updateSummary();
+                } else {
+                    appliedDiscount = 0;
+                    messageDiv.innerHTML = '<span class="text-red-600">' + data.message + '</span>';
+                    updateSummary();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                messageDiv.innerHTML = '<span class="text-red-600">An error occurred. Please try again.</span>';
+            })
+            .finally(() => {
+                // Re-enable button
+                applyBtn.disabled = false;
+                applyBtn.textContent = 'Apply';
+                applyBtn.classList.remove('opacity-75');
+            });
+        }
+
+        // Allow Enter key to trigger discount application
+        document.getElementById('discountCodeInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault(); // Prevent form submission
+                applyDiscount();
+            }
+        });
+
+        // Initial setup on page load (e.g., if a discount was already applied from a previous step)
+        document.addEventListener('DOMContentLoaded', function() {
+            shippingFee = calculateClientShippingFee(shippingMethodSelect.value);
+            updateSummary();
+        });
+
+        shippingMethodSelect.addEventListener('change', function () {
+            shippingFee = calculateClientShippingFee(this.value);
+            updateSummary();
+        });
+    </script>
+}

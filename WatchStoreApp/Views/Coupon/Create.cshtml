@@ -1,0 +1,66 @@
+﻿@model WatchStoreApp.ViewModel.Coupon.CreateCouponVM
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Create Coupon";
+    var themeGreen = "#005844";
+}
+
+<div class="w-full p-8 bg-white font-sans">
+    <h1 class="text-2xl font-bold mb-10 uppercase text-gray-800">CREATE A NEW COUPON</h1>
+
+    <div class="max-w-4xl">
+        <form method="post" class="space-y-8">
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
+                <label asp-for="CouponCode" class="block text-lg font-medium text-gray-700 md:col-span-1">Coupon Code</label>
+                <div class="md:col-span-3">
+                    <input asp-for="CouponCode" placeholder="Coupon Code"
+                           class="w-full px-4 py-3 border border-gray-300 rounded bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[color:var(--themeGreen)] focus:border-transparent placeholder-gray-400" style="--themeGreen: @themeGreen" />
+                    <span asp-validation-for="CouponCode" class="text-red-600 text-sm mt-1 block"></span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
+                <label asp-for="DiscountRate" class="block text-lg font-medium text-gray-700 md:col-span-1">Discount Rate</label>
+                <div class="md:col-span-3">
+                    <input asp-for="DiscountRate" type="number" placeholder="Discount Rate"
+                           class="w-full px-4 py-3 border border-gray-300 rounded bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[color:var(--themeGreen)] focus:border-transparent placeholder-gray-400" style="--themeGreen: @themeGreen" />
+                    <span asp-validation-for="DiscountRate" class="text-red-600 text-sm mt-1 block"></span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
+                <label asp-for="StartDate" class="block text-lg font-medium text-gray-700 md:col-span-1">Start Date</label>
+                <div class="md:col-span-3">
+                    <input asp-for="StartDate" type="date"
+                           class="w-full px-4 py-3 border border-gray-300 rounded bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[color:var(--themeGreen)] focus:border-transparent placeholder-gray-400 font-sans" style="--themeGreen: @themeGreen" />
+                    <span asp-validation-for="StartDate" class="text-red-600 text-sm mt-1 block"></span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
+                <label asp-for="ExpireDate" class="block text-lg font-medium text-gray-700 md:col-span-1">Expire Date</label>
+                <div class="md:col-span-3">
+                    <input asp-for="ExpireDate" type="date"
+                           class="w-full px-4 py-3 border border-gray-300 rounded bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[color:var(--themeGreen)] focus:border-transparent placeholder-gray-400 font-sans" style="--themeGreen: @themeGreen" />
+                    <span asp-validation-for="ExpireDate" class="text-red-600 text-sm mt-1 block"></span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-center pt-6">
+                <div class="md:col-span-1"></div> <div class="md:col-span-3">
+                    <button type="submit" class="w-full md:w-auto px-12 py-3 bg-[color:var(--themeGreen)] text-white text-lg font-medium rounded hover:opacity-90 transition shadow-sm uppercase" style="--themeGreen: @themeGreen">
+                        Create new Coupon
+                    </button>
+                </div>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

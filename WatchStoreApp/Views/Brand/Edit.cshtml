@@ -1,0 +1,83 @@
+﻿@model WatchStoreApp.ViewModel.Brand.EditBrandVM
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Edit Brand";
+    // Defining theme color for consistency
+    var themeGreen = "#005844";
+}
+
+<div class="w-full p-8 bg-white font-sans">
+    <h1 class="text-2xl font-bold mb-10 uppercase text-gray-800">UPDATE BRAND INFORMATION</h1>
+
+    <div class="max-w-4xl space-y-12">
+
+        <form method="post" asp-action="EditImage" enctype="multipart/form-data">
+            <input type="hidden" asp-for="BrandId" />
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
+                <label class="block text-lg font-medium text-gray-700 md:col-span-1 pt-4">Brand Image</label>
+
+                <div class="md:col-span-3 space-y-4">
+                    <label for="ImageFile" class="flex flex-col items-center justify-center w-full h-40 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition group relative overflow-hidden">
+                        <div class="flex flex-col items-center justify-center pt-5 pb-6 relative z-10">
+                            <p id="fileNameDisplay" class="mb-3 text-gray-500">Choose image</p>
+                            <div class="px-8 py-2 bg-[#4F93E7] text-white rounded shadow-sm group-hover:bg-blue-600 transition">
+                                Upload
+                            </div>
+                        </div>
+                        <input type="file" name="ImageFile" id="ImageFile" accept="image/*" class="hidden" />
+                    </label>
+                    <span asp-validation-for="ImageFile" class="text-red-600 text-sm block"></span>
+
+                    <button type="submit" class="px-8 py-2.5 bg-[color:var(--themeGreen)] text-white font-medium rounded hover:opacity-90 transition shadow-sm" style="--themeGreen: @themeGreen">
+                        Update
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <form method="post" asp-action="Edit" class="space-y-8">
+            <input type="hidden" asp-for="BrandId" />
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
+                <label asp-for="BrandName" class="block text-lg font-medium text-gray-700 md:col-span-1">Brand Name</label>
+                <div class="md:col-span-3">
+                    <input asp-for="BrandName" placeholder="Brand Name"
+                           class="w-full px-4 py-3 border border-gray-300 rounded bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[color:var(--themeGreen)] focus:border-transparent placeholder-gray-400" style="--themeGreen: @themeGreen" />
+                    <span asp-validation-for="BrandName" class="text-red-600 text-sm mt-1 block"></span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
+                <label asp-for="Origin" class="block text-lg font-medium text-gray-700 md:col-span-1">Origin</label>
+                <div class="md:col-span-3">
+                    <input asp-for="Origin" placeholder="Origin"
+                           class="w-full px-4 py-3 border border-gray-300 rounded bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[color:var(--themeGreen)] focus:border-transparent placeholder-gray-400" style="--themeGreen: @themeGreen" />
+                    <span asp-validation-for="Origin" class="text-red-600 text-sm mt-1 block"></span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-center pt-6">
+                <div class="md:col-span-1"></div> <div class="md:col-span-3">
+                    <button type="submit" class="w-full md:w-auto px-12 py-3 bg-[color:var(--themeGreen)] text-white text-lg font-medium rounded hover:opacity-90 transition shadow-sm uppercase" style="--themeGreen: @themeGreen">
+                        Update Brand
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        document.getElementById('ImageFile').addEventListener('change', function(e) {
+            var fileName = e.target.files[0] ? e.target.files[0].name : "Choose image";
+            document.getElementById('fileNameDisplay').textContent = fileName;
+        });
+    </script>
+}

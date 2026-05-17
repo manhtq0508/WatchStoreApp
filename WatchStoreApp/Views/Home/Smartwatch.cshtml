@@ -1,0 +1,198 @@
+﻿@model WatchStoreApp.Models.Product
+@{
+    ViewData["Title"] = Model.Name;
+
+    var themeColorText = "text-[#005844]";
+    var themeBg = "bg-[#005844]";
+    var themeBorder = "border-[#005844]";
+    var themeHoverBg = "hover:bg-[#004535]";
+    var themeHoverText = "hover:text-[#004535]";
+    var themeLightBg = "bg-[#f0fdf4]";
+}
+
+<style>
+    .main-image {
+        transition: opacity 0.2s ease-in-out;
+    }
+    .thumbnail-img:hover {
+        border-color: #005844;
+        transform: translateY(-2px);
+    }
+</style>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 font-sans">
+
+    <nav class="text-sm text-gray-500 mb-8 flex items-center space-x-2 whitespace-nowrap overflow-x-auto hide-scrollbar">
+        <a href="/Home" class="hover:text-gray-800 transition">Home</a>
+        <span>/</span>
+        <a href="/Home/Smartwatch" class="hover:text-gray-800 transition">Smartwatches</a>
+        <span>/</span>
+        <span class="font-medium text-gray-800 truncate" title="@Model.Name">@Model.Name</span>
+    </nav>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
+
+        <div class="space-y-6">
+            <div class="aspect-w-1 aspect-h-1 w-full bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 flex items-center justify-center p-4 relative group">
+                <img src="@Model.ImageUrl1"
+                     alt="@Model.Name"
+                     class="main-image w-full h-full object-contain transform group-hover:scale-105 transition duration-500">
+            </div>
+
+            <div class="flex justify-center gap-4 overflow-x-auto py-2">
+                @if (!string.IsNullOrEmpty(Model.ImageUrl1))
+                {
+                    <img src="@Model.ImageUrl1" alt="Thumbnail 1"
+                         class="thumbnail-img w-24 h-24 object-cover rounded-xl cursor-pointer border-2 border-transparent shadow-sm transition-all duration-300"
+                         onclick="changeImage(this.src)">
+                }
+                @if (!string.IsNullOrEmpty(Model.ImageUrl2))
+                {
+                    <img src="@Model.ImageUrl2" alt="Thumbnail 2"
+                         class="thumbnail-img w-24 h-24 object-cover rounded-xl cursor-pointer border-2 border-transparent shadow-sm transition-all duration-300"
+                         onclick="changeImage(this.src)">
+                }
+                @if (!string.IsNullOrEmpty(Model.ImageUrl3))
+                {
+                    <img src="@Model.ImageUrl3" alt="Thumbnail 3"
+                         class="thumbnail-img w-24 h-24 object-cover rounded-xl cursor-pointer border-2 border-transparent shadow-sm transition-all duration-300"
+                         onclick="changeImage(this.src)">
+                }
+            </div>
+        </div>
+
+        <div class="flex flex-col">
+            @if (Model.Brand != null)
+            {
+                <a href="/Home/Brand?id=@Model.Brand.BrandId" class="text-lg font-medium @themeColorText @themeHoverText transition mb-2 inline-block">
+                    @Model.Brand.BrandName
+                </a>
+            }
+
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4 leading-tight">@Model.Name</h1>
+
+            <div class="mb-8 pb-8 border-b border-gray-100">
+                <div class="flex flex-wrap items-end gap-4 mb-4">
+                    <p class="text-4xl font-bold @themeColorText">@Model.SellingPrice.ToString("N0") ₫</p>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    @if (Model.StockQuantity > 0)
+                    {
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-50 text-green-700 font-medium text-sm">
+                            <i class="bi bi-check-circle-fill"></i> In Stock
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-50 text-red-700 font-medium text-sm">
+                            <i class="bi bi-x-circle-fill"></i> Out of stock
+                        </span>
+                    }
+                    <span class="text-gray-400 text-sm">| SKU: @Model.ProductId</span>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-4 mb-10">
+                <a href="@((Model.StockQuantity > 0) ? $"/Payment?productId={Model.ProductId}&quantity=1" : "#")"
+                   class="flex-1 px-8 py-4 @themeBg text-white rounded-xl font-bold uppercase tracking-wider shadow-md hover:shadow-lg transition-all duration-300 @themeHoverBg flex items-center justify-center gap-2 text-lg no-underline
+              @(Model.StockQuantity == 0 ? "opacity-50 cursor-not-allowed pointer-events-none" : "")">
+                    <i class="bi bi-lightning-fill"></i> Buy Now
+                </a>
+
+                <button onclick="addToCart(@Model.ProductId, 1)"
+                        class="flex-1 px-8 py-4 border-2 @themeBorder @themeColorText rounded-xl font-bold uppercase tracking-wider hover:shadow-md transition-all duration-300 hover:@themeLightBg flex items-center justify-center gap-2 text-lg
+                   @(Model.StockQuantity == 0 ? "opacity-50 cursor-not-allowed" : "")"
+                @(Model.StockQuantity == 0 ? "disabled" : "")>
+                    <i class="bi bi-cart-plus-fill"></i> Add to Cart
+                </button>
+            </div>
+
+
+
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-6 uppercase tracking-wide flex items-center">
+                    <i class="bi bi-gear-fill mr-3 @themeColorText"></i> Technical Specifications
+                </h2>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <table class="min-w-full divide-y divide-gray-100">
+                        <tbody class="divide-y divide-gray-100">
+                            @{
+                                string rowBase = "flex flex-col sm:flex-row";
+                                string thBase = "p-4 sm:w-1/3 bg-gray-50 text-gray-500 font-medium text-sm uppercase tracking-wider sm:border-r border-gray-100 flex items-center";
+                                string tdBase = "p-4 sm:w-2/3 text-gray-900 font-semibold flex items-center";
+                            }
+
+                            @if (Model.Brand != null)
+                            {
+                                <tr class="@rowBase"><th class="@thBase">Brand</th><td class="@tdBase">@Model.Brand.BrandName</td></tr>
+                            }
+                            @if (Model.Brand != null)
+                            {
+                                <tr class="@rowBase"><th class="@thBase">Brand Origin</th><td class="@tdBase">@Model.Brand.Origin</td></tr>
+                            }
+                            <tr class="@rowBase"><th class="@thBase">Gender</th><td class="@tdBase">@Model.Gender</td></tr>
+                            <tr class="@rowBase"><th class="@thBase">Watch Type</th><td class="@tdBase">@Model.WatchType</td></tr>
+                            <tr class="@rowBase"><th class="@thBase">Glass Material</th><td class="@tdBase">@Model.GlassMaterial</td></tr>
+                            <tr class="@rowBase"><th class="@thBase">Case Diameter</th><td class="@tdBase">@Model.CaseDiameter mm</td></tr>
+                            <tr class="@rowBase"><th class="@thBase">Case Thickness</th><td class="@tdBase">@Model.CaseThickness mm</td></tr>
+                            <tr class="@rowBase"><th class="@thBase">Water Resistance</th><td class="@tdBase">@Model.WaterResistance</td></tr>
+                            <tr class="@rowBase"><th class="@thBase">Product Genre</th><td class="@tdBase">@Model.ProductGenre</td></tr>
+                            <tr class="@rowBase"><th class="@thBase">Strap Material</th><td class="@tdBase">@Model.StrapMaterial</td></tr>
+                            <tr class="@rowBase"><th class="@thBase">Strap Color</th><td class="@tdBase">@Model.StrapColor</td></tr>
+                            <tr class="@rowBase"><th class="@thBase">Watch Style</th><td class="@tdBase">@Model.WatchStyle</td></tr>
+
+                            @if (Model.SmartWatch != null)
+                            {
+                                <tr class="@rowBase bg-gray-50"><th class="@thBase bg-gray-100 text-gray-700 font-bold" colspan="2">SMARTWATCH DETAILS</th></tr>
+                                <tr class="@rowBase"><th class="@thBase">Battery Life</th><td class="@tdBase">@Model.SmartWatch.BateryLife</td></tr>
+                                <tr class="@rowBase"><th class="@thBase">Display Resolution</th><td class="@tdBase">@Model.SmartWatch.DisplayResolution</td></tr>
+                                <tr class="@rowBase"><th class="@thBase">Display Technology</th><td class="@tdBase">@Model.SmartWatch.DisplayTechnology</td></tr>
+                                <tr class="@rowBase"><th class="@thBase">Screen Size</th><td class="@tdBase">@Model.SmartWatch.ScreenSize</td></tr>
+                                <tr class="@rowBase"><th class="@thBase">Sensors</th><td class="@tdBase">@Model.SmartWatch.Sensors</td></tr>
+                            }
+
+                            <tr class="@rowBase"><th class="@thBase">Warranty Period</th><td class="@tdBase">@Model.WarrantyPeriod</td></tr>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    function changeImage(src) {
+        const mainImage = document.querySelector(".main-image");
+        mainImage.style.opacity = 0;
+        setTimeout(() => {
+            mainImage.src = src;
+            mainImage.style.opacity = 1;
+        }, 150);
+    }
+
+    function addToCart(productId, quantity) {
+        fetch('/Cart/AddToCart', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `productId=${productId}&quantity=${quantity}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Product added to cart successfully!');
+            } else {
+                alert(data.message || 'Failed to add product to cart');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while adding to cart');
+        });
+    }
+</script>

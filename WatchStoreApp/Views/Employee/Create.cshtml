@@ -1,0 +1,125 @@
+﻿@model WatchStoreApp.ViewModel.Employee.CreateEmployeeVM
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Create Employee";
+    var themeGreen = "#005844";
+}
+
+<div class="w-full p-8 bg-white font-sans">
+    <h1 class="text-2xl font-bold mb-10 uppercase text-gray-800">
+        CREATE NEW EMPLOYEE
+    </h1>
+
+    <div class="max-w-4xl">
+        <form asp-action="Create" method="post" class="space-y-8">
+
+            <!-- Employee Name -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
+                <label asp-for="Name" class="text-lg font-medium text-gray-700 md:col-span-1">
+                    Employee Name
+                </label>
+                <div class="md:col-span-3">
+                    <input asp-for="Name" placeholder="Employee Name"
+                           class="w-full px-4 py-3 border border-gray-300 rounded bg-gray-50
+                                  focus:outline-none focus:ring-2 focus:ring-[color:var(--themeGreen)]"
+                           style="--themeGreen:@themeGreen" />
+                    <span asp-validation-for="Name" class="text-red-600 text-sm block mt-1"></span>
+                </div>
+            </div>
+
+            <!-- Citizen ID -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
+                <label asp-for="CardNumber" class="text-lg font-medium text-gray-700 md:col-span-1">
+                    Citizen ID Card
+                </label>
+                <div class="md:col-span-3">
+                    <input asp-for="CardNumber" placeholder="Citizen ID Card"
+                           class="w-full px-4 py-3 border border-gray-300 rounded bg-gray-50
+                                  focus:outline-none focus:ring-2 focus:ring-[color:var(--themeGreen)]"
+                           style="--themeGreen:@themeGreen" />
+                    <span asp-validation-for="CardNumber" class="text-red-600 text-sm block mt-1"></span>
+                </div>
+            </div>
+
+            <!-- Phone Number -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
+                <label asp-for="PhoneNumber" class="text-lg font-medium text-gray-700 md:col-span-1">
+                    Phone Number
+                </label>
+                <div class="md:col-span-3">
+                    <input asp-for="PhoneNumber" placeholder="Phone Number"
+                           class="w-full px-4 py-3 border border-gray-300 rounded bg-gray-50
+                                  focus:outline-none focus:ring-2 focus:ring-[color:var(--themeGreen)]"
+                           style="--themeGreen:@themeGreen" />
+                    <span asp-validation-for="PhoneNumber" class="text-red-600 text-sm block mt-1"></span>
+                </div>
+            </div>
+
+            <!-- Role -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
+                <label asp-for="Role" class="text-lg font-medium text-gray-700 md:col-span-1">
+                    Role
+                </label>
+                <div class="md:col-span-3">
+                    <select asp-for="Role"
+                            class="w-full px-4 py-3 border border-gray-300 rounded bg-gray-50
+                                   focus:outline-none focus:ring-2 focus:ring-[color:var(--themeGreen)]"
+                            style="--themeGreen:@themeGreen">
+                        <option value="">Select Role</option>
+                        <option value="Admin">Admin</option>
+                        <option value="Employee">Employee</option>
+                    </select>
+                    <span asp-validation-for="Role" class="text-red-600 text-sm block mt-1"></span>
+                </div>
+            </div>
+
+            <!-- Email -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
+                <label asp-for="Email" class="text-lg font-medium text-gray-700 md:col-span-1">
+                    Email
+                </label>
+                <div class="md:col-span-3">
+                    <input asp-for="Email" type="email" placeholder="Email"
+                           class="w-full px-4 py-3 border border-gray-300 rounded bg-gray-50
+                                  focus:outline-none focus:ring-2 focus:ring-[color:var(--themeGreen)]"
+                           style="--themeGreen:@themeGreen" />
+                    <span asp-validation-for="Email" class="text-red-600 text-sm block mt-1"></span>
+                </div>
+            </div>
+
+            <!-- Password -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
+                <label asp-for="Password" class="text-lg font-medium text-gray-700 md:col-span-1">
+                    Password
+                </label>
+                <div class="md:col-span-3">
+                    <input asp-for="Password" type="password" placeholder="Password"
+                           class="w-full px-4 py-3 border border-gray-300 rounded bg-gray-50
+                                  focus:outline-none focus:ring-2 focus:ring-[color:var(--themeGreen)]"
+                           style="--themeGreen:@themeGreen" />
+                    <span asp-validation-for="Password" class="text-red-600 text-sm block mt-1"></span>
+                </div>
+            </div>
+
+            <!-- Submit -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-center pt-6">
+                <div class="md:col-span-1"></div>
+                <div class="md:col-span-3">
+                    <button type="submit"
+                            class="w-full px-12 py-3 bg-[color:var(--themeGreen)] text-white
+                                   text-lg font-medium rounded uppercase hover:opacity-90 transition"
+                            style="--themeGreen:@themeGreen">
+                        Create Employee
+                    </button>
+                </div>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -1,0 +1,116 @@
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+    ViewData["Title"] = "Register";
+    var backgroundImage = Url.Content("~/images/banner/banner0.png");
+    var genderList = ViewBag.GenderList as List<SelectListItem> ?? new List<SelectListItem>
+    {
+        new SelectListItem { Value = "Male", Text = "Male" },
+        new SelectListItem { Value = "Female", Text = "Female" },
+        new SelectListItem { Value = "Other", Text = "Other" }
+    };
+}
+
+<div class="min-h-screen bg-cover bg-center flex items-center justify-end px-6"
+     style="background-image: linear-gradient(90deg, rgba(0,0,0,0.25), rgba(0,0,0,0.45)), url('@backgroundImage'); padding-top: 60px; padding-bottom: 60px;">
+    <div class="w-1/2 max-w-lg bg-white rounded-3xl shadow-2xl text-gray-900 justify-end"
+         style="padding: 48px 56px; margin-right: 40px;">
+        <h2 class="text-3xl font-bold mb-12 text-center" style="color: #000000;">REGISTER</h2>
+
+        <form method="post" class="space-y-6">
+            <!-- Row 1: Account Name and Gender -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <input type="text" name="name" required
+                     placeholder="Account Name"
+                     class="w-full px-4 py-3 bg-white border border-gray-300 rounded-md
+                     focus:outline-none focus:ring-2 focus:ring-[#015D4E]" />
+                <select name="gender" required
+                        placeholder="Gender"
+                        class="w-full px-4 py-3 bg-white border border-gray-300 rounded-md
+                        focus:outline-none focus:ring-2 focus:ring-[#015D4E]">
+                    @foreach (var item in genderList)
+                    {
+                        <option value="@item.Value">@item.Text</option>
+                    }
+                </select>
+            </div>
+
+            <!-- Row 2: Phone Number and Birthdate -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <input type="text" name="phoneNumber" required
+                     placeholder="Phone Number"
+                     class="w-full px-4 py-3 bg-white border border-gray-300 rounded-md
+                     focus:outline-none focus:ring-2 focus:ring-[#015D4E]" />
+                <input type="date" name="dateOfBirth" required
+                     placeholder="Birthdate"
+                     class="w-full px-4 py-3 bg-white border border-gray-300 rounded-md
+                     focus:outline-none focus:ring-2 focus:ring-[#015D4E]" />
+            </div>
+
+            <!-- Row 3: Email -->
+            <input type="email" name="email" required
+                 placeholder="Email"
+                 class="w-full px-4 py-3 bg-white border border-gray-300 rounded-md
+                 focus:outline-none focus:ring-2 focus:ring-[#015D4E]" />
+
+            <!-- Row 4: Password with eye icon -->
+            <div class="relative">
+                <input type="password" name="password" id="password" required
+                     placeholder="Password"
+                     class="w-full px-4 py-3 pr-12 bg-white border border-gray-300 rounded-md
+                     focus:outline-none focus:ring-2 focus:ring-[#015D4E]" />
+                <button type="button" onclick="togglePassword('password')" 
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-800 focus:outline-none">
+                    <i class="fa fa-eye" id="password-eye"></i>
+                </button>
+            </div>
+
+            <!-- Row 5: Confirm Password with eye icon -->
+            <div class="relative">
+                <input type="password" name="confirmPassword" id="confirmPassword" required
+                     placeholder="Confirm Password"
+                     class="w-full px-4 py-3 pr-12 bg-white border border-gray-300 rounded-md
+                     focus:outline-none focus:ring-2 focus:ring-[#015D4E]" />
+                <button type="button" onclick="togglePassword('confirmPassword')" 
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-800 focus:outline-none">
+                    <i class="fa fa-eye" id="confirmPassword-eye"></i>
+                </button>
+            </div>
+
+            <button type="submit"
+                    class="w-full bg-[#015D4E] text-white py-3 rounded-2xl font-semibold hover:opacity-90 transition"
+                    style="background-color: #015D4E; color: #FFFFFF; border-radius: 2px; margin-top: 30px;">
+                Register
+            </button>
+
+            <div class="flex flex-col gap-3 mt-6">
+                <p class="text-sm text-center text-black">
+                    Already have an account?
+                    <a href="/Signin" class="underline decoration-solid decoration-2" style="color: #015D4E;">Sign In</a>
+                </p>
+            </div>
+
+            @if (ViewBag.Error != null)
+            {
+                <p class="text-red-600 text-sm mt-2">@ViewBag.Error</p>
+            }
+        </form>
+    </div>
+</div>
+
+<script>
+    function togglePassword(fieldId) {
+        const field = document.getElementById(fieldId);
+        const eyeIcon = document.getElementById(fieldId + '-eye');
+        
+        if (field.type === 'password') {
+            field.type = 'text';
+            eyeIcon.classList.remove('fa-eye');
+            eyeIcon.classList.add('fa-eye-slash');
+        } else {
+            field.type = 'password';
+            eyeIcon.classList.remove('fa-eye-slash');
+            eyeIcon.classList.add('fa-eye');
+        }
+    }
+</script>
+

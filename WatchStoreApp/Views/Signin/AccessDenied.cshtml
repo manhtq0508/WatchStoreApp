@@ -1,0 +1,27 @@
+﻿@{
+    ViewData["Title"] = "Access Denied";
+    var role = ViewBag.UserRole as string ?? "Guest";
+    var redirectUrl = "/";
+    if (role == "Employee")
+    {
+        redirectUrl = "/Dashboard";
+    }
+}
+
+<div class="access-denied-container flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6">
+    <h2 class="text-4xl font-bold text-red-600 mb-4">Access Denied</h2>
+    <p class="text-lg text-gray-700 mb-2">You do not have permission to access this page.</p>
+    <p class="text-gray-600 mb-4">You will be redirected automatically in 3 seconds.</p>
+    <a href="@redirectUrl"
+       class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded transition-colors duration-300">
+        Go Now
+    </a>
+</div>
+
+@section Scripts {
+    <script>
+        setTimeout(function () {
+            window.location.href = '@redirectUrl';
+        }, 3000);
+    </script>
+}

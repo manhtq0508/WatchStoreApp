@@ -1,0 +1,227 @@
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Dashboard";
+    var themeColor = "#005844";
+}
+
+<div class="w-full bg-gray-50 font-sans min-h-screen">
+    <div class="p-8">
+
+        <div>
+            <h2 class="text-xl font-bold text-gray-800 uppercase tracking-wider mb-6">REVENUES</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+
+                <div class="bg-red-50 rounded-2xl p-6 flex items-center justify-between shadow-sm">
+                    <div>
+                        <p class="text-5xl font-bold text-gray-800 mb-2">@ViewBag.ProductCount</p>
+                        <p class="text-gray-600 font-medium">Products</p>
+                    </div>
+                    <div class="w-16 h-16">
+                        <i class="bi bi-box-seam text-red-400 text-5xl"></i>
+                    </div>
+                </div>
+
+                <div class="bg-teal-50 rounded-2xl p-6 flex items-center justify-between shadow-sm">
+                    <div>
+                        <p class="text-5xl font-bold text-gray-800 mb-2">@ViewBag.CustomerCount</p>
+                        <p class="text-gray-600 font-medium">Customers</p>
+                    </div>
+                    <div class="w-16 h-16">
+                        <i class="bi bi-person text-teal-500 text-5xl"></i>
+                    </div>
+                </div>
+
+                <div class="bg-orange-50 rounded-2xl p-6 flex items-center justify-between shadow-sm">
+                    <div>
+                        <p class="text-5xl font-bold text-gray-800 mb-2">@ViewBag.EmployeeCount</p>
+                        <p class="text-gray-600 font-medium">Employees</p>
+                    </div>
+                    <div class="w-16 h-16">
+                        <i class="bi bi-person-badge text-orange-400 text-5xl"></i>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+
+                <div class="bg-blue-50 rounded-2xl p-6 flex items-center justify-between shadow-sm">
+                    <div>
+                        <p class="text-5xl font-bold text-gray-800 mb-2">@ViewBag.MaleCustomerCount</p>
+                        <p class="text-gray-600 font-medium">Male Customers</p>
+                    </div>
+                    <div class="w-16 h-16">
+                        <i class="bi bi-gender-male text-blue-400 text-5xl"></i>
+                    </div>
+                </div>
+
+                <div class="bg-purple-50 rounded-2xl p-6 flex items-center justify-between shadow-sm">
+                    <div>
+                        <p class="text-5xl font-bold text-gray-800 mb-2">@ViewBag.FemaleCustomerCount</p>
+                        <p class="text-gray-600 font-medium">Female Customers</p>
+                    </div>
+                    <div class="w-16 h-16">
+                        <i class="bi bi-gender-female text-purple-400 text-5xl"></i>
+                    </div>
+                </div>
+
+                <div class="bg-indigo-50 rounded-2xl p-6 flex items-center justify-between shadow-sm">
+                    <div>
+                        <p class="text-5xl font-bold text-gray-800 mb-2">@ViewBag.OtherCustomerCount</p>
+                        <p class="text-gray-600 font-medium">Other Customers</p>
+                    </div>
+                    <div class="w-16 h-16">
+                        <i class="bi bi-gender-ambiguous text-indigo-400 text-5xl"></i>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+
+            <div class="lg:col-span-3">
+                <h2 class="text-xl font-bold text-gray-800 uppercase tracking-wider mb-6">MONTHLY <span style="color: @themeColor;">REVENUE</span></h2>
+                <div class="bg-white rounded-2xl p-6 shadow-sm min-h-[500px]">
+                    <canvas id="monthlyRevenueChart"></canvas>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2">
+                <h2 class="text-xl font-bold text-gray-800 uppercase tracking-wider mb-6">BEST <span style="color: @themeColor;">SELLERS</span></h2>
+                <div class="bg-white rounded-2xl p-6 shadow-sm min-h-[500px]">
+                    <canvas id="bestSellersChart"></canvas>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        // Monthly Revenue Data from Backend
+        var monthlyRevenueData = @Html.Raw(Json.Serialize(ViewBag.MonthlyRevenue));
+        
+        // Best Sellers Data from Backend
+        var bestSellersData = @Html.Raw(Json.Serialize(ViewBag.BestSellers));
+        
+        // Monthly Revenue Chart (Line/Column Chart)
+        const monthlyRevenueCtx = document.getElementById('monthlyRevenueChart').getContext('2d');
+        const monthlyRevenueChart = new Chart(monthlyRevenueCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [{
+                    label: 'Revenue',
+                    data: monthlyRevenueData,
+                    backgroundColor: 'rgba(0, 88, 68, 0.6)',
+                    borderColor: 'rgba(0, 88, 68, 1)',
+                    borderWidth: 2,
+                    borderRadius: 4
+                }, {
+                    label: 'Revenue (Line)',
+                    data: monthlyRevenueData,
+                    type: 'line',
+                    borderColor: 'rgba(59, 130, 246, 1)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 3,
+                    fill: false,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                    },
+                    title: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString('vi-VN') + ' ₫';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Best Sellers Pie Chart
+        const bestSellersCtx = document.getElementById('bestSellersChart').getContext('2d');
+        
+        // Extract labels and data from bestSellersData
+        var bestSellerLabels = bestSellersData.map(function(item) { return item.productName; });
+        var bestSellerQuantities = bestSellersData.map(function(item) { return item.totalQuantity; });
+        
+        // Calculate percentages for pie chart
+        var totalQuantity = bestSellerQuantities.reduce(function(a, b) { return a + b; }, 0);
+        var bestSellerPercentages = bestSellerQuantities.map(function(qty) {
+            return totalQuantity > 0 ? Math.round((qty / totalQuantity) * 100) : 0;
+        });
+        
+        const bestSellersChart = new Chart(bestSellersCtx, {
+            type: 'pie',
+            data: {
+                labels: bestSellerLabels.length > 0 ? bestSellerLabels : ['No Data'],
+                datasets: [{
+                    label: 'Sales',
+                    data: bestSellerPercentages.length > 0 ? bestSellerPercentages : [100],
+                    backgroundColor: [
+                        'rgba(0, 88, 68, 0.8)',
+                        'rgba(59, 130, 246, 0.8)',
+                        'rgba(16, 185, 129, 0.8)',
+                        'rgba(245, 158, 11, 0.8)',
+                        'rgba(239, 68, 68, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(0, 88, 68, 1)',
+                        'rgba(59, 130, 246, 1)',
+                        'rgba(16, 185, 129, 1)',
+                        'rgba(245, 158, 11, 1)',
+                        'rgba(239, 68, 68, 1)'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (bestSellerQuantities.length > 0 && context.dataIndex < bestSellerQuantities.length) {
+                                    label += bestSellerPercentages[context.dataIndex] + '% (' + bestSellerQuantities[context.dataIndex] + ' units)';
+                                } else {
+                                    label += context.parsed + '%';
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+}
