@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using WatchStoreApp.Data;
+using WatchStoreApp.Utils;
 
 namespace WatchStoreApp.Controllers
 {
@@ -22,10 +23,17 @@ namespace WatchStoreApp.Controllers
         public async Task<IActionResult> Index(string email, string password)
         {
             var customer = _context.Customers
-                .FirstOrDefault(c => c.Email == email && c.Password == password);
+                .FirstOrDefault(c => c.Email == email);
 
             if (customer != null)
             {
+                if (!PasswordHelper.VerifyPassword(password, customer.Password))
+                {
+                    ViewBag.Error = "Invalid email or password.";
+                    Console.WriteLine("Failed login attempt for email: " + email);
+                    return View();
+                }
+                
                 var claims = new List<Claim>
                 {
                     new Claim(ClaimTypes.Name, customer.Name),
@@ -42,10 +50,11 @@ namespace WatchStoreApp.Controllers
             else 
             {
                 var employee = _context.Employees
-                    .FirstOrDefault(e => e.Email == email && e.Password == password);
-                if (employee == null)
+                    .FirstOrDefault(e => e.Email == email);
+                
+                if (employee == null || !PasswordHelper.VerifyPassword(password, employee.Password))
                 {
-                    ViewBag.ErrorMessage = "Invalid email or password.";
+                    ViewBag.Error = "Invalid email or password.";
                     Console.WriteLine("Failed login attempt for email: " + email);
                     return View();
                 }

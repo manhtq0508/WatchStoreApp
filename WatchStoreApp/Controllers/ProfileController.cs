@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using WatchStoreApp.Data;
+using WatchStoreApp.Utils;
 using WatchStoreApp.ViewModel.Profile;
 
 namespace WatchStoreApp.Controllers
@@ -78,7 +79,10 @@ namespace WatchStoreApp.Controllers
             account.Email = model.Email;
             if (!string.IsNullOrEmpty(model.Password))
             {
-                account.Password = model.Password;
+                var hashedPassword = PasswordHelper.IsBcryptHash(model.Password) 
+                    ? model.Password 
+                    : PasswordHelper.HashPassword(model.Password);
+                account.Password = hashedPassword;
             }
 
             _context.Customers.Update(account);

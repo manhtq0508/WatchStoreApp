@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using WatchStoreApp.Data;
 using WatchStoreApp.Models;
+using WatchStoreApp.Utils;
 using WatchStoreApp.ViewModel.Employee;
 
 namespace WatchStoreApp.Controllers
@@ -46,6 +47,9 @@ namespace WatchStoreApp.Controllers
                 Console.WriteLine("Model state is not valid");
                 return View(model);
             }
+            
+            var hashedPassword = PasswordHelper.HashPassword(model.Password);
+            
             var employee = new Employee
             {
                 Name = model.Name,
@@ -54,7 +58,7 @@ namespace WatchStoreApp.Controllers
                 Role = model.Role,
                 IsAvailable = "Available",
                 Email = model.Email,
-                Password = model.Password
+                Password = hashedPassword
             };
             _context.Employees.Add(employee);
             await _context.SaveChangesAsync();

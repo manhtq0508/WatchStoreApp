@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using WatchStoreApp.Data;
 using WatchStoreApp.Models;
+using WatchStoreApp.Utils;
 
 namespace WatchStoreApp.Controllers
 {
@@ -71,6 +72,8 @@ namespace WatchStoreApp.Controllers
                 return View();
             }
 
+            var hashedPassword = PasswordHelper.HashPassword(password);
+            
             // Create new customer
             var customer = new Customer
             {
@@ -79,7 +82,7 @@ namespace WatchStoreApp.Controllers
                 PhoneNumber = phoneNumber,
                 DateOfBirth = dateOfBirth,
                 Email = email,
-                Password = password,
+                Password = hashedPassword,
                 IsAvailable = "Available"
             };
 

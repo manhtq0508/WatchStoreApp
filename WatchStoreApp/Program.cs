@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using WatchStoreApp.Data;
+using WatchStoreApp.Models;
+using WatchStoreApp.Utils;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -59,5 +61,26 @@ app.MapControllerRoute(
     .WithStaticAssets();
 
 Stripe.StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
+
+using var scope = app.Services.CreateScope();
+var dbContext = scope.ServiceProvider.GetRequiredService<MyAppContext>();
+var adminEmail = builder.Configuration["AdminCredentials:Email"] ?? throw new NullReferenceException("Admin email address not set");
+var adminPassword = builder.Configuration["AdminCredentials:Password"] ?? throw new NullReferenceException("Admin password not set");
+
+if (!dbContext.Employees.Any(x => x.Email == adminEmail))
+{
+    dbContext.Employees.Add(new Employee
+    {
+        Name = "Admin",
+        CardNumber = "00-00-00",
+        PhoneNumber = "0000000000",
+        Email = adminEmail,
+        Password = PasswordHelper.HashPassword(adminPassword),
+        Role = "Admin",
+        IsAvailable = "Available"
+    });
+
+    dbContext.SaveChanges();
+}
 
 app.Run();

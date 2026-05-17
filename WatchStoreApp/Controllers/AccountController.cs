@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WatchStoreApp.Data;
+using WatchStoreApp.Utils;
 using WatchStoreApp.ViewModel.Account;
 
 namespace WatchStoreApp.Controllers
@@ -28,7 +29,7 @@ namespace WatchStoreApp.Controllers
                 Console.WriteLine("Employee not found.");
                 return NotFound();
             }
-
+            
             var model = new UpdateAccountVM
             {
                 EmployeeId = employee.EmployeeId,
@@ -67,7 +68,11 @@ namespace WatchStoreApp.Controllers
             account.Email = model.Email;
             if (!string.IsNullOrEmpty(model.Password))
             {
-                account.Password = model.Password;
+                var hashedPassword = PasswordHelper.IsBcryptHash(model.Password) 
+                    ? model.Password 
+                    : PasswordHelper.HashPassword(model.Password);
+    
+                account.Password = hashedPassword;
             }
 
             context.Employees.Update(account);

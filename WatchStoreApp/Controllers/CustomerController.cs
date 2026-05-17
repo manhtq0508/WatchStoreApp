@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using WatchStoreApp.Data;
 using WatchStoreApp.Models;
+using WatchStoreApp.Utils;
 using WatchStoreApp.ViewModel.Customer;
 
 namespace WatchStoreApp.Controllers
@@ -94,7 +95,7 @@ namespace WatchStoreApp.Controllers
                 PhoneNumber = model.PhoneNumber,
                 Gender = model.Gender,
                 Email = model.Email,
-                Password = model.Password,
+                Password = PasswordHelper.HashPassword(model.Password),
                 IsAvailable = model.IsAvailable
             };
             _context.Customers.Add(customer);
@@ -195,7 +196,13 @@ namespace WatchStoreApp.Controllers
             existingCustomer.IsAvailable = model.IsAvailable;
             existingCustomer.Email = model.Email;
             if (!string.IsNullOrWhiteSpace(model.Password))
-                existingCustomer.Password = model.Password;
+            {
+                var hashedPassword = PasswordHelper.IsBcryptHash(model.Password) 
+                    ? model.Password 
+                    : PasswordHelper.HashPassword(model.Password);
+                
+                existingCustomer.Password = hashedPassword;
+            }
             _context.SaveChanges();
             return RedirectToAction("Index");
 
