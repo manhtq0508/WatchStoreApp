@@ -11,10 +11,12 @@ namespace WatchStoreApp.Controllers
     public class RegisterController : Controller
     {
         private readonly MyAppContext _context;
+        private readonly RedisContext _redis;
         
-        public RegisterController(MyAppContext context)
+        public RegisterController(MyAppContext context, RedisContext redis)
         {
             _context = context;
+            _redis = redis;
         }
 
         public IActionResult Index()
@@ -100,7 +102,7 @@ namespace WatchStoreApp.Controllers
         }
 
         [HttpPost]
-        public IActionResult ForgotPassword(string email)
+        public async Task<IActionResult> ForgotPassword(string email)
         {
             if (string.IsNullOrEmpty(email))
             {
@@ -118,8 +120,11 @@ namespace WatchStoreApp.Controllers
                 return View();
             }
 
+            var token = RandomString.GenerateSecureString(32);
+            await _redis.SetStringAsync($"password-reset:{token}", email, TimeSpan.FromMinutes(5));
+            
             var resetLink = Url.Action("ResetPassword", "Register",
-                new { email = email }, Request.Scheme);
+                new { email = email, token = token }, Request.Scheme);
 
             SendEmail(email, resetLink);
 
@@ -132,17 +137,24 @@ namespace WatchStoreApp.Controllers
         }
 
         [HttpGet]
-        public IActionResult ResetPassword(string email)
+        public async Task<IActionResult> ResetPassword(string email, string token)
         {
-            if (string.IsNullOrEmpty(email))
+            if (string.IsNullOrEmpty(email) ||  string.IsNullOrEmpty(token))
             {
                 return RedirectToAction("ForgotPassword");
             }
 
+            var resetEmail = await _redis.GetStringAsync($"password-reset:{token}");
+            if (string.IsNullOrEmpty(resetEmail) || resetEmail != email)
+            {
+                ViewBag.Error = "Invalid or expired reset link.";
+                return RedirectToAction("ForgotPassword");
+            }
+            
             var customer = _context.Customers.FirstOrDefault(c => c.Email == email);
             if (customer == null)
             {
-                ViewBag.Error = "Invalid reset link.";
+                ViewBag.Error = "Invalid or expired reset link.";
                 return RedirectToAction("ForgotPassword");
             }
 
@@ -151,7 +163,7 @@ namespace WatchStoreApp.Controllers
         }
 
         [HttpPost]
-        public IActionResult ResetPassword(string email, string newPassword, string confirmPassword)
+        public async Task<IActionResult> ResetPassword(string email, string newPassword, string confirmPassword)
         {
             if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(newPassword) || string.IsNullOrEmpty(confirmPassword))
             {
@@ -175,9 +187,11 @@ namespace WatchStoreApp.Controllers
             }
 
             // Update password
-            customer.Password = newPassword;
+            customer.Password = PasswordHelper.HashPassword(newPassword);
             _context.Customers.Update(customer);
             _context.SaveChanges();
+            
+            await _redis.DeleteKeyAsync($"password-reset:{email}");
 
             ViewBag.Success = "Password has been reset successfully. You can now sign in with your new password.";
             return RedirectToAction("Index", "Signin");

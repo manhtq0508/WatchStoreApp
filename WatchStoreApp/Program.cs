@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
 using WatchStoreApp.Data;
 using WatchStoreApp.Models;
 using WatchStoreApp.Utils;
@@ -11,6 +12,10 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddHttpClient();
 builder.Services.AddDbContext<MyAppContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnectionString")));
+
+var redisConnectionString = builder.Configuration["ConnectionStrings:Redis"] ??  throw new NullReferenceException("Redis connection string not set");
+builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(redisConnectionString));
+builder.Services.AddScoped<RedisContext>();
 
 // Add session services for cart
 builder.Services.AddDistributedMemoryCache();
