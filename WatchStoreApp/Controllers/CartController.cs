@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 using WatchStoreApp.Data;
 using WatchStoreApp.Models;
 using WatchStoreApp.ViewModel.Cart;
@@ -85,12 +86,14 @@ namespace WatchStoreApp.Controllers
         {
             if (!User.Identity!.IsAuthenticated)
             {
+                Log.Warning("Add to cart rejected (not authenticated). ProductId={ProductId} Quantity={Quantity}", productId, quantity);
                 return Json(new { success = false, message = "Please login first" });
             }
 
             var product = _context.Products.Find(productId);
             if (product == null)
             {
+                Log.Warning("Add to cart failed (product not found). ProductId={ProductId}", productId);
                 return Json(new { success = false, message = "Product not found" });
             }
 
@@ -106,6 +109,7 @@ namespace WatchStoreApp.Controllers
             if (dbCart != null)
             {
                 dbCart.Quantity += quantity;
+                Log.Information("Cart item quantity increased. CustomerId={CustomerId} ProductId={ProductId} AddedQuantity={Quantity} NewQuantity={NewQuantity}", customerId, productId, quantity, dbCart.Quantity);
             }
             else
             {
@@ -115,6 +119,7 @@ namespace WatchStoreApp.Controllers
                     Quantity = quantity,
                     CustomerId = customerId
                 });
+                Log.Information("Cart item added. CustomerId={CustomerId} ProductId={ProductId} Quantity={Quantity}", customerId, productId, quantity);
             }
 
             _context.SaveChanges();
@@ -131,6 +136,7 @@ namespace WatchStoreApp.Controllers
         {
             if (quantity <= 0)
             {
+                Log.Warning("Update cart quantity rejected (invalid quantity). ProductId={ProductId} Quantity={Quantity}", productId, quantity);
                 return Json(new { success = false });
             }
 
@@ -145,11 +151,13 @@ namespace WatchStoreApp.Controllers
 
             if (cartItem == null)
             {
+                Log.Warning("Update cart quantity failed (item not found). CustomerId={CustomerId} ProductId={ProductId}", customerId, productId);
                 return Json(new { success = false });
             }
 
             cartItem.Quantity = quantity;
             _context.SaveChanges();
+            Log.Information("Cart item quantity updated. CustomerId={CustomerId} ProductId={ProductId} Quantity={Quantity}", customerId, productId, quantity);
 
             var cartItems = _context.Carts
                 .Include(c => c.Product)
@@ -183,6 +191,11 @@ namespace WatchStoreApp.Controllers
             {
                 _context.Carts.Remove(cartItem);
                 _context.SaveChanges();
+                Log.Information("Cart item removed. CustomerId={CustomerId} ProductId={ProductId}", customerId, productId);
+            }
+            else
+            {
+                Log.Warning("Remove from cart ignored (item not found). CustomerId={CustomerId} ProductId={ProductId}", customerId, productId);
             }
 
             var cartItems = _context.Carts
@@ -206,14 +219,19 @@ namespace WatchStoreApp.Controllers
         {
             if (string.IsNullOrEmpty(couponCode))
             {
+                Log.Warning("Apply coupon rejected (empty code).");
                 return Json(new { success = false, message = "Please enter a coupon code." });
             }
+
+            int customerId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            Log.Information("Apply coupon attempt. CustomerId={CustomerId} CouponCode={CouponCode}", customerId, couponCode);
 
             var coupon = _context.Coupons
                 .FirstOrDefault(c => c.CouponCode == couponCode);
 
             if (coupon == null)
             {
+                Log.Warning("Apply coupon failed (invalid code). CustomerId={CustomerId} CouponCode={CouponCode}", customerId, couponCode);
                 return Json(new { success = false, message = "Invalid coupon code." });
             }
 
@@ -221,15 +239,15 @@ namespace WatchStoreApp.Controllers
 
             if (now < coupon.StartDate)
             {
+                Log.Warning("Apply coupon failed (not active yet). CustomerId={CustomerId} CouponCode={CouponCode}", customerId, couponCode);
                 return Json(new { success = false, message = "This coupon is not active yet." });
             }
 
             if (now > coupon.ExpireDate)
             {
+                Log.Warning("Apply coupon failed (expired). CustomerId={CustomerId} CouponCode={CouponCode}", customerId, couponCode);
                 return Json(new { success = false, message = "This coupon has expired." });
             }
-
-            int customerId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
             var cartItems = _context.Carts
                 .Include(c => c.Product)
@@ -243,6 +261,8 @@ namespace WatchStoreApp.Controllers
 
             HttpContext.Session.SetString("CouponCode", coupon.CouponCode);
             HttpContext.Session.SetString("DiscountAmount", discountAmount.ToString());
+
+            Log.Information("Coupon applied. CustomerId={CustomerId} CouponId={CouponId} CouponCode={CouponCode} DiscountAmount={DiscountAmount}", customerId, coupon.CouponId, coupon.CouponCode, discountAmount);
 
             return Json(new
             {

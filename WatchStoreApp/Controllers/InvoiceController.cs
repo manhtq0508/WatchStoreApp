@@ -3,6 +3,7 @@ using System.Net.Mail;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 using WatchStoreApp.Data;
 using WatchStoreApp.Models;
 using WatchStoreApp.ViewModel.Invoice;
@@ -67,8 +68,11 @@ namespace WatchStoreApp.Controllers
 
             if (invoice == null)
             {
+                Log.Warning("Invoice status change page not found. InvoiceId={InvoiceId}", id);
                 return NotFound();
             }
+
+            Log.Information("Invoice status change page opened. InvoiceId={InvoiceId} CurrentStatus={Status}", invoice.InvoiceId, invoice.Status);
 
             ViewBag.InvoiceId = invoice.InvoiceId;
             ViewBag.CurrentStatus = invoice.Status;
@@ -91,8 +95,11 @@ namespace WatchStoreApp.Controllers
 
             if (invoice == null)
             {
+                Log.Warning("Invoice status change failed (invoice not found). InvoiceId={InvoiceId}", id);
                 return NotFound();
             }
+
+            Log.Information("Invoice status change requested. InvoiceId={InvoiceId} FromStatus={FromStatus} ToStatus={ToStatus}", invoice.InvoiceId, invoice.Status, status);
 
             // Validate status
             var validStatuses = new[] { "Processing", "Delivered", "Cancelled" };
@@ -101,6 +108,7 @@ namespace WatchStoreApp.Controllers
                 ModelState.AddModelError("Status", "Invalid status selected.");
                 ViewBag.InvoiceId = invoice.InvoiceId;
                 ViewBag.CurrentStatus = invoice.Status;
+                Log.Warning("Invoice status change rejected (invalid status). InvoiceId={InvoiceId} Status={Status}", invoice.InvoiceId, status);
                 return View();
             }
 
@@ -114,6 +122,7 @@ namespace WatchStoreApp.Controllers
                 foreach (var d in details)
                 {
                     d.Product.StockQuantity += d.Quantity;
+                    Log.Information("Stock restored after invoice cancellation. InvoiceId={InvoiceId} ProductId={ProductId} Quantity={Quantity} NewStock={NewStock}", invoice.InvoiceId, d.Product.ProductId, d.Quantity, d.Product.StockQuantity);
                 }
 
                 _context.SaveChanges();
@@ -123,6 +132,8 @@ namespace WatchStoreApp.Controllers
             invoice.Status = status;
             _context.SaveChanges();
 
+            Log.Information("Invoice status updated. InvoiceId={InvoiceId} Status={Status}", invoice.InvoiceId, invoice.Status);
+
             // 4. SEND EMAIL NOTIFICATION
             try
             {
@@ -131,10 +142,11 @@ namespace WatchStoreApp.Controllers
 
                 // Send to the customer's email
                 SendEmail(invoice.Customer.Email, subject, messageBody);
+                Log.Information("Invoice status email sent. InvoiceId={InvoiceId} Status={Status}", invoice.InvoiceId, status);
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Could not send email: " + ex.Message);
+                Log.Error(ex, "Failed to send invoice status email. InvoiceId={InvoiceId} Status={Status}", invoice.InvoiceId, status);
             }
 
             return RedirectToAction("Index");
@@ -194,7 +206,7 @@ namespace WatchStoreApp.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Email Error: " + ex.Message);
+                Log.Error(ex, "SMTP email send failed. ToEmail={ToEmail}", toEmail);
             }
         }
 

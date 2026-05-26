@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
 using WatchStoreApp.Data;
 using WatchStoreApp.Utils;
 
@@ -14,6 +15,20 @@ namespace WatchStoreApp.Controllers
         {
             _context = context;
         }
+
+        private static string MaskEmail(string? email)
+        {
+            if (string.IsNullOrWhiteSpace(email)) return "";
+            var atIndex = email.IndexOf('@');
+            if (atIndex <= 1) return "***";
+            var local = email[..atIndex];
+            var domain = email[atIndex..];
+            var maskedLocal = local.Length <= 2
+                ? local[0] + "***"
+                : local[0] + new string('*', Math.Min(6, local.Length - 2)) + local[^1];
+            return maskedLocal + domain;
+        }
+
         public IActionResult Index()
         {
             return View();
@@ -22,6 +37,7 @@ namespace WatchStoreApp.Controllers
         [HttpPost]
         public async Task<IActionResult> Index(string email, string password)
         {
+            Log.Information("Login attempt. Email={Email}", MaskEmail(email));
             var customer = _context.Customers
                 .FirstOrDefault(c => c.Email == email);
 
@@ -30,7 +46,7 @@ namespace WatchStoreApp.Controllers
                 if (!PasswordHelper.VerifyPassword(password, customer.Password))
                 {
                     ViewBag.Error = "Invalid email or password.";
-                    Console.WriteLine("Failed login attempt for email: " + email);
+                    Log.Warning("Login failed (invalid password). CustomerEmail={Email}", MaskEmail(email));
                     return View();
                 }
                 
@@ -45,6 +61,7 @@ namespace WatchStoreApp.Controllers
                 var principal = new ClaimsPrincipal(identity);
 
                 await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+                Log.Information("Customer login succeeded. CustomerId={CustomerId}", customer.CustomerId);
                 return RedirectToAction("Index", "Home");
             }
             else 
@@ -55,7 +72,7 @@ namespace WatchStoreApp.Controllers
                 if (employee == null || !PasswordHelper.VerifyPassword(password, employee.Password))
                 {
                     ViewBag.Error = "Invalid email or password.";
-                    Console.WriteLine("Failed login attempt for email: " + email);
+                    Log.Warning("Login failed (employee not found or invalid password). Email={Email}", MaskEmail(email));
                     return View();
                 }
 
@@ -70,12 +87,16 @@ namespace WatchStoreApp.Controllers
                 var empPrincipal = new ClaimsPrincipal(empIdentity);
                 await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, empPrincipal);
 
+                Log.Information("Employee login succeeded. EmployeeId={EmployeeId} Role={Role}", employee.EmployeeId, employee.Role);
                 return RedirectToAction("Index", "Dashboard");
             }
         }
 
         public async Task<IActionResult> Logout()
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var role = User.FindFirstValue(ClaimTypes.Role);
+            Log.Information("User logout. UserId={UserId} Role={Role}", userId, role);
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Index");
         }
@@ -83,6 +104,8 @@ namespace WatchStoreApp.Controllers
         public IActionResult AccessDenied()
         {
             var userRole = User.FindFirstValue(ClaimTypes.Role) ?? "Guest";
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            Log.Warning("Access denied. UserId={UserId} Role={Role}", userId, userRole);
             ViewBag.UserRole = userRole;
             return View();
         }

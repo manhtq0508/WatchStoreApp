@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 using WatchStoreApp.Data;
 using WatchStoreApp.Models;
 using WatchStoreApp.ViewModel.Product;
@@ -75,6 +76,7 @@ namespace WatchStoreApp.Controllers
         {
             if (!ModelState.IsValid)
             {
+                Log.Warning("Mechanical product create rejected (invalid model).");
                 model.BrandList = _context.Brands
                 .Where(b => b.Flag == 1)
                 .Select(b => new SelectListItem
@@ -180,6 +182,8 @@ namespace WatchStoreApp.Controllers
             _context.MechanicalWatches.Add(mechanicalWatch);
             await _context.SaveChangesAsync();
 
+            Log.Information("Mechanical product created. ProductId={ProductId} BrandId={BrandId} StockQuantity={StockQuantity}", product.ProductId, product.BrandId, product.StockQuantity);
+
             return RedirectToAction("Index");
 
         }
@@ -235,6 +239,7 @@ namespace WatchStoreApp.Controllers
         {
             if (!ModelState.IsValid)
             {
+                Log.Warning("Smartwatch product create rejected (invalid model).");
                 model.BrandList = _context.Brands
                 .Where(b => b.Flag == 1)
                 .Select(b => new SelectListItem
@@ -340,6 +345,8 @@ namespace WatchStoreApp.Controllers
 
             _context.SmartWatches.Add(smartwatch);
             await _context.SaveChangesAsync();
+
+            Log.Information("Smartwatch product created. ProductId={ProductId} BrandId={BrandId} StockQuantity={StockQuantity}", product.ProductId, product.BrandId, product.StockQuantity);
 
             return RedirectToAction("Index");
 

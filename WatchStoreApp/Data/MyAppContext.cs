@@ -23,6 +23,11 @@ namespace WatchStoreApp.Data
         public DbSet<Setting> Settings { get; set; } = null!;
         public DbSet<Cart> Carts { get; set; } = null!;
 
+        protected override void ConfigureConventions(ModelConfigurationBuilder builder)
+        {
+            builder.Properties<decimal>().HavePrecision(18, 2);
+        }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

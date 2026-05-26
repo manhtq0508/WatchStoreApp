@@ -3,6 +3,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 using Stripe;
 using Stripe.Checkout;
 using WatchStoreApp.Data;
@@ -25,6 +26,19 @@ namespace WatchStoreApp.Controllers
         {
             _context = context;
             _configuration = configuration;
+        }
+
+        private static string MaskEmail(string? email)
+        {
+            if (string.IsNullOrWhiteSpace(email)) return "";
+            var atIndex = email.IndexOf('@');
+            if (atIndex <= 1) return "***";
+            var local = email[..atIndex];
+            var domain = email[atIndex..];
+            var maskedLocal = local.Length <= 2
+                ? local[0] + "***"
+                : local[0] + new string('*', Math.Min(6, local.Length - 2)) + local[^1];
+            return maskedLocal + domain;
         }
 
 //#warning Remove before deployment
@@ -58,6 +72,11 @@ namespace WatchStoreApp.Controllers
         [HttpGet]
         public IActionResult Index(int? productId = null, int quantity = 1)
         {
+            var authCustomerId = User.Identity?.IsAuthenticated == true
+                ? User.FindFirstValue(ClaimTypes.NameIdentifier)
+                : null;
+            Log.Information("Checkout page opened. CustomerId={CustomerId} BuyNowProductId={ProductId} Quantity={Quantity}", authCustomerId, productId, quantity);
+
             var paymentVM = new PaymentVM();
             var setting = _context.Settings.FirstOrDefault();
             var baseShippingFee = setting?.ShippingFee ?? 500000m;
@@ -70,6 +89,7 @@ namespace WatchStoreApp.Controllers
                 var product = _context.Products.Find(productId.Value);
                 if (product == null)
                 {
+                    Log.Warning("Checkout redirected (product not found). ProductId={ProductId}", productId.Value);
                     return RedirectToAction("Index", "Home");
                 }
 
@@ -88,6 +108,7 @@ namespace WatchStoreApp.Controllers
             {
                 if (!User.Identity!.IsAuthenticated)
                 {
+                    Log.Warning("Checkout rejected (not authenticated).");
                     return Json(new { success = false, message = "Please login first" });
                 }
 
@@ -103,6 +124,7 @@ namespace WatchStoreApp.Controllers
                 if (!cartItemsInDb.Any())
                 {
                     // Cart rỗng → redirect về Cart
+                    Log.Information("Checkout redirected (empty cart). CustomerId={CustomerId}", customerId);
                     return RedirectToAction("Index", "Cart");
                 }
 
@@ -133,6 +155,18 @@ namespace WatchStoreApp.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult ProcessPayment(PaymentVM model)
         {
+            var authCustomerId = User.Identity?.IsAuthenticated == true
+                ? User.FindFirstValue(ClaimTypes.NameIdentifier)
+                : null;
+            Log.Information(
+                "Checkout submit received. AuthCustomerId={AuthCustomerId} BuyNowProductId={ProductId} PaymentMethod={PaymentMethod} ShippingMethod={ShippingMethod} Email={Email}",
+                authCustomerId,
+                model.ProductId,
+                model.PaymentMethod,
+                model.ShippingMethod,
+                MaskEmail(model.Email)
+            );
+
             var setting = _context.Settings.FirstOrDefault();
             var baseShippingFee = setting?.ShippingFee ?? 500000m;
 
@@ -160,15 +194,18 @@ namespace WatchStoreApp.Controllers
                 if (!productsInDb.ContainsKey(item.ProductId))
                 {
                     ModelState.AddModelError("", $"Sản phẩm {item.Name} không tồn tại.");
+                    Log.Warning("Checkout validation failed (product not found). ProductId={ProductId}", item.ProductId);
                 }
                 else if (item.Quantity > productsInDb[item.ProductId])
                 {
                     ModelState.AddModelError("", $"Sản phẩm {item.Name} chỉ còn {productsInDb[item.ProductId]} trong kho.");
+                    Log.Warning("Checkout validation failed (insufficient stock). ProductId={ProductId} Requested={Requested} Available={Available}", item.ProductId, item.Quantity, productsInDb[item.ProductId]);
                 }
             }
 
             if (!ModelState.IsValid)
             {
+                Log.Warning("Checkout submit rejected (invalid model state). Email={Email}", MaskEmail(model.Email));
                 model.Cart = cart;
                 model.Subtotal = cart.TotalPrice;
                 model.BaseShippingFee = baseShippingFee;
@@ -194,6 +231,11 @@ namespace WatchStoreApp.Controllers
                 };
                 _context.Customers.Add(customer);
                 _context.SaveChanges();
+                Log.Information("Guest customer created during checkout. CustomerId={CustomerId} Email={Email}", customer.CustomerId, MaskEmail(customer.Email));
+            }
+            else
+            {
+                Log.Information("Existing customer used for checkout. CustomerId={CustomerId}", customer.CustomerId);
             }
 
             // Tính tổng với discount
@@ -213,6 +255,11 @@ namespace WatchStoreApp.Controllers
                 {
                     couponId = coupon.CouponId;
                     discount = subtotal * coupon.DiscountRate;
+                    Log.Information("Coupon applied during checkout. CustomerId={CustomerId} CouponId={CouponId} CouponCode={CouponCode} Discount={Discount}", customer.CustomerId, couponId, model.DiscountCode, discount);
+                }
+                else
+                {
+                    Log.Warning("Coupon rejected during checkout. CustomerId={CustomerId} CouponCode={CouponCode}", customer.CustomerId, model.DiscountCode);
                 }
             }
 
@@ -250,11 +297,18 @@ namespace WatchStoreApp.Controllers
                     });
                     product.StockQuantity -= item.Quantity;
                     _context.Products.Update(product);
+                    Log.Information("Stock decremented for checkout. ProductId={ProductId} Quantity={Quantity} RemainingStock={Remaining}", product.ProductId, item.Quantity, product.StockQuantity);
+                }
+                else
+                {
+                    Log.Warning("Invoice detail skipped (product not found). ProductId={ProductId}", item.ProductId);
                 }
             }
 
             _context.Invoices.Add(invoice);
             _context.SaveChanges();
+
+            Log.Information("Invoice created. InvoiceId={InvoiceId} CustomerId={CustomerId} PaymentMethod={PaymentMethod} Total={Total}", invoice.InvoiceId, invoice.CustomerId, invoice.PaymentMethod, invoice.Total);
 
             // Nếu checkout từ Cart (không phải Buy Now) → xóa cart DB
             if (!model.ProductId.HasValue && User.Identity!.IsAuthenticated)
@@ -265,6 +319,7 @@ namespace WatchStoreApp.Controllers
                 {
                     _context.Carts.RemoveRange(cartItemsInDb);
                     _context.SaveChanges();
+                    Log.Information("Cart cleared after checkout. CustomerId={CustomerId} ItemsRemoved={Count}", customerId, cartItemsInDb.Count);
                 }
             }
 
@@ -272,10 +327,12 @@ namespace WatchStoreApp.Controllers
             if (model.PaymentMethod == "Credit Card")
             {
                 var stripeSessionUrl = CreateStripeCheckoutSession(invoice, cart);
+                Log.Information("Redirecting to Stripe checkout. InvoiceId={InvoiceId}", invoice.InvoiceId);
                 return Redirect(stripeSessionUrl);
             }
             else
             {
+                Log.Information("Checkout completed without Stripe. InvoiceId={InvoiceId}", invoice.InvoiceId);
                 return RedirectToAction("Success", new { invoiceId = invoice.InvoiceId });
             }
         }
@@ -285,6 +342,7 @@ namespace WatchStoreApp.Controllers
         private string CreateStripeCheckoutSession(Invoice invoice, CartVM cart)
         {
             var domain = $"{Request.Scheme}://{Request.Host}";
+            Log.Information("Creating Stripe checkout session. InvoiceId={InvoiceId} LineItemCount={LineItemCount} ShippingFee={ShippingFee} Discount={Discount}", invoice.InvoiceId, cart.Items.Count, invoice.ShippingFee, invoice.Discount);
             
             var lineItems = new List<SessionLineItemOptions>();
             List<SessionDiscountOptions> discounts = null;
@@ -365,18 +423,26 @@ namespace WatchStoreApp.Controllers
             var service = new SessionService();
             var session = service.Create(options);
 
+            Log.Information("Stripe checkout session created. InvoiceId={InvoiceId} SessionId={SessionId}", invoice.InvoiceId, session.Id);
+
             return session.Url;
         }
 
         [HttpGet]
         public IActionResult StripeSuccess(string session_id, int invoiceId)
         {
+            Log.Information("Stripe success callback received. InvoiceId={InvoiceId} SessionId={SessionId}", invoiceId, session_id);
             var invoice = _context.Invoices.Find(invoiceId);
             if (invoice != null)
             {
                 invoice.Status = "Pending";
                 invoice.PaymentMethod = "Stripe";
                 _context.SaveChanges();
+                Log.Information("Invoice updated after Stripe success. InvoiceId={InvoiceId} Status={Status}", invoiceId, invoice.Status);
+            }
+            else
+            {
+                Log.Warning("Stripe success callback ignored (invoice not found). InvoiceId={InvoiceId}", invoiceId);
             }
 
             return RedirectToAction("Success", new { invoiceId = invoiceId });
@@ -385,6 +451,7 @@ namespace WatchStoreApp.Controllers
         [HttpGet]
         public IActionResult StripeCancel(int invoiceId)
         {
+            Log.Warning("Stripe cancel callback received. InvoiceId={InvoiceId}", invoiceId);
             var invoice = _context.Invoices
                 .Include(i => i.Customer)
                 .FirstOrDefault(i => i.InvoiceId == invoiceId);
@@ -405,10 +472,12 @@ namespace WatchStoreApp.Controllers
                     {
                         product.StockQuantity += detail.Quantity;
                         _context.Products.Update(product);
+                        Log.Information("Stock restored after Stripe cancel. ProductId={ProductId} Quantity={Quantity} NewStock={NewStock}", product.ProductId, detail.Quantity, product.StockQuantity);
                     }
                 }
 
                 _context.SaveChanges();
+                Log.Information("Invoice cancelled after Stripe cancel. InvoiceId={InvoiceId}", invoiceId);
             }
 
             if (invoice == null)
@@ -507,6 +576,11 @@ namespace WatchStoreApp.Controllers
                 return Json(new { success = false, message = "Invalid subtotal." });
             }
 
+            var authCustomerId = User.Identity?.IsAuthenticated == true
+                ? User.FindFirstValue(ClaimTypes.NameIdentifier)
+                : null;
+            Log.Information("Validate discount code request. CustomerId={CustomerId} CouponCode={CouponCode} Subtotal={Subtotal} ShippingMethod={ShippingMethod}", authCustomerId, request.DiscountCode, request.Subtotal, request.ShippingMethod);
+
             var coupon = _context.Coupons
                 .FirstOrDefault(c => c.CouponCode == request.DiscountCode 
                                     && c.StartDate <= DateTime.Now 
@@ -515,6 +589,7 @@ namespace WatchStoreApp.Controllers
 
             if (coupon == null)
             {
+                Log.Warning("Validate discount code failed (invalid or expired). CustomerId={CustomerId} CouponCode={CouponCode}", authCustomerId, request.DiscountCode);
                 return Json(new { success = false, message = "Invalid or expired discount code." });
             }
 
@@ -547,12 +622,14 @@ namespace WatchStoreApp.Controllers
 
         public IActionResult Success(int invoiceId)
         {
+            Log.Information("Checkout success page opened. InvoiceId={InvoiceId}", invoiceId);
             var invoice = _context.Invoices
                 .Include(i => i.Customer)
                 .FirstOrDefault(i => i.InvoiceId == invoiceId);
 
             if (invoice == null)
             {
+                Log.Warning("Checkout success page redirected (invoice not found). InvoiceId={InvoiceId}", invoiceId);
                 return RedirectToAction("Index", "Home");
             }
 

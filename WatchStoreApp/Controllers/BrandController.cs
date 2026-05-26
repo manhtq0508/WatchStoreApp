@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
 using WatchStoreApp.Data;
 using WatchStoreApp.Models;
 using WatchStoreApp.ViewModel.Brand;
@@ -69,11 +70,11 @@ namespace WatchStoreApp.Controllers
                 }
                 context.Brands.Add(brand);
                 await context.SaveChangesAsync();
+                Log.Information("Brand created. BrandId={BrandId} BrandName={BrandName}", brand.BrandId, brand.BrandName);
                 return RedirectToAction("Index");
-                Console.WriteLine(brand.ImageUrl);
 
             }
-            Console.WriteLine("Invalid model");
+            Log.Warning("Brand create rejected (invalid model).");
             return View(model);
         }
 
@@ -100,6 +101,7 @@ namespace WatchStoreApp.Controllers
             var brand = context.Brands.Find(model.BrandId);
             if (brand == null)
             {
+                Log.Warning("Brand edit failed (not found). BrandId={BrandId}", model.BrandId);
                 return NotFound();
             }
 
@@ -108,6 +110,8 @@ namespace WatchStoreApp.Controllers
 
             context.Brands.Update(brand);
             await context.SaveChangesAsync();
+
+            Log.Information("Brand updated. BrandId={BrandId}", brand.BrandId);
 
             return RedirectToAction("Index");
         }
@@ -147,6 +151,7 @@ namespace WatchStoreApp.Controllers
                 brand.ImageUrl = "/images/brands/" + uniqueFileName;
                 context.Brands.Update(brand);
                 await context.SaveChangesAsync();
+                Log.Information("Brand image updated. BrandId={BrandId}", brand.BrandId);
             }
             return RedirectToAction("Edit", new { id = model.BrandId });
         }
@@ -167,11 +172,13 @@ namespace WatchStoreApp.Controllers
             var brand = context.Brands.Find(id);
             if (brand == null)
             {
+                Log.Warning("Brand delete failed (not found). BrandId={BrandId}", id);
                 return NotFound();
             }
             brand.Flag = 0;
             context.Brands.Update(brand);
             await context.SaveChangesAsync();
+            Log.Information("Brand deleted (flagged). BrandId={BrandId}", id);
             return RedirectToAction("Index");
         }
     }

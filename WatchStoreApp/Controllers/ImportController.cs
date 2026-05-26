@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 using WatchStoreApp.Data;
 using WatchStoreApp.Models;
 using WatchStoreApp.ViewModel.Import;
@@ -44,7 +45,7 @@ namespace WatchStoreApp.Controllers
             var userName = User.Identity.Name;
             var userRole = User.FindFirstValue(ClaimTypes.Role);
 
-            Console.WriteLine($"User ID: {userId}, User Name: {userName}, User Role: {userRole}");
+            Log.Information("Import bill create page opened. EmployeeId={EmployeeId} UserName={UserName} Role={Role}", userId, userName, userRole);
 
             var vm = new CreateBillVM
             {
@@ -63,6 +64,7 @@ namespace WatchStoreApp.Controllers
             if (model.ImportDetails == null || !model.ImportDetails.Any())
             {
                 ModelState.AddModelError(string.Empty, "Import details cannot be empty.");
+                Log.Warning("Import bill create rejected (empty details). EmployeeId={EmployeeId}", model.EmployeeId);
             }
 
             if (ModelState.IsValid)
@@ -82,6 +84,8 @@ namespace WatchStoreApp.Controllers
                 };
                 _context.ImportBills.Add(importBill);
 
+                Log.Information("Import bill creation started. EmployeeId={EmployeeId} ItemCount={ItemCount} Total={Total}", model.EmployeeId, model.ImportDetails.Count, model.Total);
+
                 foreach (var detail in model.ImportDetails)
                 {
                     var product = _context.Products.FirstOrDefault(p => p.ProductId == detail.ProductId);
@@ -89,10 +93,16 @@ namespace WatchStoreApp.Controllers
                     {
                         product.StockQuantity += detail.Quantity;
                         _context.Products.Update(product);
+                        Log.Information("Stock increased by import. ProductId={ProductId} Quantity={Quantity} NewStock={NewStock}", product.ProductId, detail.Quantity, product.StockQuantity);
+                    }
+                    else
+                    {
+                        Log.Warning("Import detail skipped (product not found). ProductId={ProductId}", detail.ProductId);
                     }
                 }
 
                 _context.SaveChanges();
+                Log.Information("Import bill created. ImportBillId={ImportBillId} EmployeeId={EmployeeId}", importBill.ImportBillId, importBill.EmployeeId);
                 return RedirectToAction("Index");
             }
 
@@ -125,7 +135,7 @@ namespace WatchStoreApp.Controllers
             var userName = User.Identity.Name;
             var userRole = User.FindFirstValue(ClaimTypes.Role);
 
-            Console.WriteLine($"User ID: {userId}, User Name: {userName}, User Role: {userRole}");
+            Log.Information("Import index page opened. EmployeeId={EmployeeId} UserName={UserName} Role={Role}", userId, userName, userRole);
 
             return View();
         }

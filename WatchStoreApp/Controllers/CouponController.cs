@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
 using WatchStoreApp.Data;
 using WatchStoreApp.Models;
 using WatchStoreApp.ViewModel.Coupon;
@@ -43,11 +44,13 @@ namespace WatchStoreApp.Controllers
         {
             if (!ModelState.IsValid)
             {
+                Log.Warning("Coupon create rejected (invalid model).");
                 return View(model);
             }
             if (model.DiscountRate <= 0 || model.DiscountRate > 100)
             {
                 ModelState.AddModelError("DiscountRate", "Discount Rate should be between 1 and 100 percent");
+                Log.Warning("Coupon create rejected (invalid discount rate). DiscountRate={DiscountRate}", model.DiscountRate);
                 return View(model);
             }
             model.DiscountRate = model.DiscountRate / 100;
@@ -62,6 +65,7 @@ namespace WatchStoreApp.Controllers
 
             _context.Coupons.Add(coupon);
             await _context.SaveChangesAsync();
+            Log.Information("Coupon created. CouponId={CouponId} CouponCode={CouponCode} DiscountRate={DiscountRate}", coupon.CouponId, coupon.CouponCode, coupon.DiscountRate);
             return RedirectToAction("Index");
         }
 
@@ -85,16 +89,19 @@ namespace WatchStoreApp.Controllers
         {
             if (!ModelState.IsValid)
             {
+                Log.Warning("Coupon edit rejected (invalid model). CouponId={CouponId}", model.CouponId);
                 return View(model);
             }
             if (model.DiscountRate <= 0 || model.DiscountRate > 100)
             {
                 ModelState.AddModelError("DiscountRate", "Discount Rate should be between 1 and 100 percent");
+                Log.Warning("Coupon edit rejected (invalid discount rate). CouponId={CouponId} DiscountRate={DiscountRate}", model.CouponId, model.DiscountRate);
                 return View(model);
             }
             var coupon = _context.Coupons.Find(model.CouponId);
             if (coupon == null)
             {
+                Log.Warning("Coupon edit failed (not found). CouponId={CouponId}", model.CouponId);
                 return NotFound();
             }
             coupon.CouponCode = model.CouponCode;
@@ -102,6 +109,7 @@ namespace WatchStoreApp.Controllers
             coupon.StartDate = model.StartDate;
             coupon.ExpireDate = model.ExpireDate;
             await _context.SaveChangesAsync();
+            Log.Information("Coupon updated. CouponId={CouponId} CouponCode={CouponCode} DiscountRate={DiscountRate}", coupon.CouponId, coupon.CouponCode, coupon.DiscountRate);
             return RedirectToAction("Index");
         }
 
@@ -122,10 +130,12 @@ namespace WatchStoreApp.Controllers
             var coupon = _context.Coupons.Find(id);
             if (coupon == null)
             {
+                Log.Warning("Coupon delete failed (not found). CouponId={CouponId}", id);
                 return NotFound();
             }
             coupon.Flag = 0;
             await _context.SaveChangesAsync();
+            Log.Information("Coupon deleted (flagged). CouponId={CouponId} CouponCode={CouponCode}", coupon.CouponId, coupon.CouponCode);
             return RedirectToAction("Index");
         }
     }
